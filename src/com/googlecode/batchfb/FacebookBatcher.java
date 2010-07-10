@@ -72,6 +72,7 @@ public class FacebookBatcher {
 	class Command<T> implements Later<T> {
 		JavaType resultType;
 		T result;
+		JsonNode errorResult;
 		
 		public Command(JavaType resultType) {
 			this.resultType = resultType;
@@ -435,6 +436,7 @@ public class FacebookBatcher {
 			// Now we need to extract the data, it comes as a set of strings (yes, JSON in strings)
 			// in the same order as the requests.  This is what a friends.get looks like:
 			// [ "[212730,431332,710904]" ]
+			// Note also that errors can show up here, so they must be checked.
 			
 			Iterator<OldRequest<?>> requestIt = requests.iterator();
 			Iterator<String> responseIt = batchRequest.result.iterator();
@@ -444,7 +446,9 @@ public class FacebookBatcher {
 				String response = responseIt.next();
 				
 				try {
-					req.result = this.mapper.readValue(response, req.resultType);
+					JsonNode root = this.mapper.readTree(response);
+					this.checkForOldApiError(root);
+					req.result = this.mapper.convertValue(root, req.resultType);
 				} catch (IOException e) {
 					throw new IOFacebookException(e);
 				}
@@ -579,22 +583,14 @@ public class FacebookBatcher {
 			
 			HttpURLConnection conn = (HttpURLConnection)call.execute();
 			
-			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK)
-			{
+			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
 				// We must examine the result for an error node since there is no other clue
 				JsonNode node = this.mapper.readTree(conn.getInputStream());
 				
-				JsonNode errorCode = node.get("error_code");
-				if (errorCode == null)
-					return this.mapper.convertValue(node, resultType);
-				else
-				{
-					this.throwOldApiException(errorCode.getIntValue(), node.path("error_msg").getValueAsText());
-					return null;	// unreachable
-				}
-			}
-			else
-			{
+				this.checkForOldApiError(node);
+
+				return this.mapper.convertValue(node, resultType);
+			} else {
 				throw new IOFacebookException("Got error " + conn.getResponseCode() + " '" + conn.getResponseMessage() + "' from " + call);
 			}
 			
@@ -604,15 +600,20 @@ public class FacebookBatcher {
 	}
 
 	/**
-	 * Maps the code and msg from an old REST api error to an equivalent graph exception
-	 * and throw the result.  If nothing special can be mapped, a bland FacebookException
-	 * is thrown.
+	 * Checks the tree of an old API call for errors, throwing an appropriately mapped
+	 * exception if one is found.  Does nothing if the node isn't an error case.
 	 */
-	private void throwOldApiException(int code, String msg) throws FacebookException {
-		switch (code) {
-			case 190: throw new OAuthException(msg);
-			case 601: throw new QueryParseException(msg);
-			default: throw new FacebookException(msg);
+	private void checkForOldApiError(JsonNode root) throws FacebookException {
+		JsonNode errorCode = root.get("error_code");
+		if (errorCode != null) {
+			int code = errorCode.getIntValue();
+			String msg = root.path("error_msg").getValueAsText();
+
+			switch (code) {
+				case 190: throw new OAuthException(msg);
+				case 601: throw new QueryParseException(msg);
+				default: throw new FacebookException(msg);
+			}
 		}
 	}
 }
