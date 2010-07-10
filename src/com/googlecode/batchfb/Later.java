@@ -22,6 +22,8 @@
 
 package com.googlecode.batchfb;
 
+import com.googlecode.batchfb.err.FacebookException;
+
 /**
  * <p>Similar to java.concurrent.Future; allows a return value to be defined sometime in
  * the future. This provides the ability to batch operations into groups.</p>

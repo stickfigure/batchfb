@@ -20,26 +20,21 @@
  * THE SOFTWARE.
  */
 
-package com.googlecode.batchfb;
+package com.googlecode.batchfb.err;
 
 /**
- * Thrown when a request to facebook times out or produces a http error code or returns totally bogus data.
- * This kind of thing happens frequently and unpredictably.
+ * <p>Thrown when Facebook returns an OAuthException error.  This indicates that there is a
+ * problem with the provided access token; for example, it may have expired.</p>
+ * 
+ * <p>Note that this is NOT thrown when an access token is not provided to
+ * methods that require it.  That produces a type:"QueryParseException".</p>
  * 
  * @author Jeff Schnitzer
  */
-public class IOFacebookException extends FacebookException {
+public class OAuthException extends FacebookException {
 	private static final long serialVersionUID = 1L;
 	
-	public IOFacebookException(String message, Throwable cause) {
-		super(message, cause);
-	}
-	
-	public IOFacebookException(String message) {
+	public OAuthException(String message) {
 		super(message);
-	}
-	
-	public IOFacebookException(Throwable cause) {
-		super(cause);
 	}
 }

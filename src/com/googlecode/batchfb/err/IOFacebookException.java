@@ -20,30 +20,26 @@
  * THE SOFTWARE.
  */
 
-package com.googlecode.batchfb;
+package com.googlecode.batchfb.err;
 
 /**
+ * Thrown when a request to facebook times out or produces a http error code or returns totally bogus data.
+ * This kind of thing happens frequently and unpredictably.
+ * 
  * @author Jeff Schnitzer
  */
-public class FacebookException extends RuntimeException {
-	
+public class IOFacebookException extends FacebookException {
 	private static final long serialVersionUID = 1L;
-
-	/**
-	 */
-	public FacebookException(String message) {
-		super(message);
-	}
 	
-	/**
-	 */
-	public FacebookException(String message, Throwable cause) {
+	public IOFacebookException(String message, Throwable cause) {
 		super(message, cause);
 	}
 	
-	/**
-	 */
-	public FacebookException(Throwable cause) {
+	public IOFacebookException(String message) {
+		super(message);
+	}
+	
+	public IOFacebookException(Throwable cause) {
 		super(cause);
 	}
 }

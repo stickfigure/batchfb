@@ -20,20 +20,30 @@
  * THE SOFTWARE.
  */
 
-package com.googlecode.batchfb;
-
+package com.googlecode.batchfb.err;
 
 /**
- * <p>Thrown when Facebook returns a QueryParseException error.  Indicates that
- * there was something wrong with the construction of the query (eg, you need
- * an access token but didn't provide one).</p>
- * 
  * @author Jeff Schnitzer
  */
-public class QueryParseException extends FacebookException {
-	private static final long serialVersionUID = 1L;
+public class FacebookException extends RuntimeException {
 	
-	public QueryParseException(String message) {
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 */
+	public FacebookException(String message) {
 		super(message);
+	}
+	
+	/**
+	 */
+	public FacebookException(String message, Throwable cause) {
+		super(message, cause);
+	}
+	
+	/**
+	 */
+	public FacebookException(Throwable cause) {
+		super(cause);
 	}
 }

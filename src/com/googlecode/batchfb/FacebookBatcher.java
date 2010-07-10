@@ -47,6 +47,10 @@ import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.type.JavaType;
 import org.codehaus.jackson.type.TypeReference;
 
+import com.googlecode.batchfb.err.FacebookException;
+import com.googlecode.batchfb.err.IOFacebookException;
+import com.googlecode.batchfb.err.OAuthException;
+import com.googlecode.batchfb.err.QueryParseException;
 import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.RequestBuilder;
 import com.googlecode.batchfb.util.StringUtils;

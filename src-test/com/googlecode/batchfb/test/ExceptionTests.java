@@ -27,8 +27,8 @@ import org.junit.Test;
 
 import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
-import com.googlecode.batchfb.OAuthException;
-import com.googlecode.batchfb.QueryParseException;
+import com.googlecode.batchfb.err.OAuthException;
+import com.googlecode.batchfb.err.QueryParseException;
 
 /**
  * Tests of the exceptions generated.

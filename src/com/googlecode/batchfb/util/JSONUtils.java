@@ -26,7 +26,7 @@ import java.io.IOException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.googlecode.batchfb.FacebookException;
+import com.googlecode.batchfb.err.FacebookException;
 
 /**
  * Some handy methods for manipulating JSON

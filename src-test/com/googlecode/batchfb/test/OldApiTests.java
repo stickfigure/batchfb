@@ -27,9 +27,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.googlecode.batchfb.FacebookBatcher;
-import com.googlecode.batchfb.FacebookException;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.Param;
+import com.googlecode.batchfb.err.FacebookException;
 
 /**
  * Basic unit tests for the batching features
