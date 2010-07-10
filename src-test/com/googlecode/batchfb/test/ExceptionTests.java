@@ -20,34 +20,42 @@
  * THE SOFTWARE.
  */
 
-package com.batchfb.test;
+package com.googlecode.batchfb.test;
 
-import org.codehaus.jackson.node.ArrayNode;
-import org.junit.Assert;
+import org.codehaus.jackson.JsonNode;
 import org.junit.Test;
 
 import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
+import com.googlecode.batchfb.OAuthException;
+import com.googlecode.batchfb.QueryParseException;
 
 /**
- * Testing out batching of multiqueries.
+ * Tests of the exceptions generated.
  * 
  * @author Jeff Schnitzer
  */
-public class MultiqueryTests {
+public class ExceptionTests {
 
   /**
+   * Use an invalid token to generate an OAuthException
    */
-  @Test
-  public void basicMultiquery() throws Exception {
+  @Test(expected=OAuthException.class)
+  public void makeOAuthException() throws Exception {
+    FacebookBatcher batcher = new FacebookBatcher("asdf");
+    
+    Later<JsonNode> node = batcher.request("/me");
+    node.get();
+  }
+  
+  /**
+   * Make a token-less call to something that requires a token.
+   */
+  @Test(expected=QueryParseException.class)
+  public void makeQueryParseException() throws Exception {
     FacebookBatcher batcher = new FacebookBatcher();
     
-    Later<ArrayNode> firstNameArray = batcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
-    Later<ArrayNode> lastNameArray = batcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
-    
-    Assert.assertEquals(1, firstNameArray.get().size());
-    Assert.assertEquals(1, lastNameArray.get().size());
-    Assert.assertEquals("Robert", firstNameArray.get().get(0).get("first_name").getTextValue());
-    Assert.assertEquals("Dobbs", lastNameArray.get().get(0).get("last_name").getTextValue());
+    Later<JsonNode> node = batcher.request("/me");
+    node.get();
   }
 }

@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package com.batchfb.test;
+package com.googlecode.batchfb.test;
 
 import java.util.List;
 
