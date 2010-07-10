@@ -58,12 +58,32 @@ public class BasicBatchTests {
 	/**
 	 */
 	@Test
+	public void singleFqlAsNodeUsingQueryFirst() throws Exception {
+		FacebookBatcher batcher = new FacebookBatcher();
+		
+		Later<JsonNode> node = batcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661");
+		Assert.assertEquals("Robert Dobbs", node.get().get("name").getTextValue());
+	}
+	
+	/**
+	 */
+	@Test
 	public void singleFqlAsObject() throws Exception {
 		FacebookBatcher batcher = new FacebookBatcher();
 		
 		Later<List<User>> array = batcher.query("SELECT name FROM user WHERE uid = 1047296661", User.class);
 		Assert.assertEquals(1, array.get().size());
 		Assert.assertEquals("Robert Dobbs", array.get().get(0).name);
+	}
+	
+	/**
+	 */
+	@Test
+	public void singleFqlAsObjectUsingQueryFirst() throws Exception {
+		FacebookBatcher batcher = new FacebookBatcher();
+		
+		Later<User> array = batcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661", User.class);
+		Assert.assertEquals("Robert Dobbs", array.get().name);
 	}
 	
 	/**

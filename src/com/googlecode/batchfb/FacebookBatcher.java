@@ -51,6 +51,8 @@ import com.googlecode.batchfb.err.FacebookException;
 import com.googlecode.batchfb.err.IOFacebookException;
 import com.googlecode.batchfb.err.OAuthException;
 import com.googlecode.batchfb.err.QueryParseException;
+import com.googlecode.batchfb.util.FirstElementLater;
+import com.googlecode.batchfb.util.FirstNodeLater;
 import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.RequestBuilder;
 import com.googlecode.batchfb.util.StringUtils;
@@ -263,6 +265,24 @@ public class FacebookBatcher {
 		Query<ArrayNode> q = new Query<ArrayNode>(fql, queryName, TypeFactory.type(ArrayNode.class));
 		this.queries.add(q);
 		return q;
+	}
+	
+	/**
+	 * Enqueue an FQL call whose result will be the first value.  If there are no
+	 * results, the value will be null.  Cannot be named.
+	 */
+	public <T> Later<T> queryFirst(String fql, Class<T> type) {
+		Later<List<T>> q = this.query(fql, type);
+		return new FirstElementLater<T>(q);
+	}
+	
+	/**
+	 * Enqueue an FQL call whose result will be the first value.  If there are no
+	 * results, the value will be null.  Cannot be named
+	 */
+	public Later<JsonNode> queryFirst(String fql) {
+		Later<ArrayNode> q = this.query(fql);
+		return new FirstNodeLater(q);
 	}
 	
 	/**
