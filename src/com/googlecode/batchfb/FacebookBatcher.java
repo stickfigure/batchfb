@@ -68,21 +68,29 @@ public class FacebookBatcher {
 	/** */
 	private static final JavaType JSON_NODE_TYPE = TypeFactory.type(JsonNode.class);
 	
+	/** The response will either be a valid value or an error */
+	static class Response<T> {
+		T result;
+		RuntimeException error;
+	}
+	
 	/** */
 	class Command<T> implements Later<T> {
 		JavaType resultType;
-		T result;
-		JsonNode errorResult;
+		Response<T> response;
 		
 		public Command(JavaType resultType) {
 			this.resultType = resultType;
 		}
 		
 		public T get() throws FacebookException {
-			if (this.result == null)
+			if (this.response == null)
 				execute();
 			
-			return this.result;
+			if (this.response.error != null)
+				throw this.response.error;
+			else
+				return this.response.result;
 		}
 	}
 	
@@ -304,7 +312,7 @@ public class FacebookBatcher {
 	 * If no calls are queued, nothing happens.
 	 */
 	@SuppressWarnings("unchecked")
-	public void execute() throws FacebookException {
+	public void execute() {
 		
 		// There is a lot of room for optimization and parallelization here.
 		// All queries are combined into a single multiquery.
@@ -314,10 +322,8 @@ public class FacebookBatcher {
 		
 		// For now, handle graph requests one at a time
 		while (!this.requests.isEmpty()) {
-			Request<?> req = this.requests.getFirst();
+			Request<?> req = this.requests.removeFirst();
 			this.execute(req);
-			// Success, remove it from the queue
-			this.requests.removeFirst();
 		}
 
 		// If we have any queries, we create a fake OldRequest to process in batch with any real OldRequests
@@ -339,75 +345,83 @@ public class FacebookBatcher {
 		}
 		
 		// Now execute any OldRequests, including the fake queryRequest (if one exists)
-		List<OldRequest<?>> todo;
-		if (queryRequest == null)
-			todo = this.oldRequests;
-		else {
-			todo = new ArrayList<OldRequest<?>>(this.oldRequests.size() + 1);
-			todo.add(queryRequest);
-			todo.addAll(this.oldRequests);
-		}
+		if (queryRequest != null)
+			this.oldRequests.add(queryRequest);
 		
-		if (!todo.isEmpty()) {
-			this.execute(todo);
+		if (!this.oldRequests.isEmpty()) {
+			this.execute(this.oldRequests);
 			
 			// We're totally done with these so we can remove them
 			this.oldRequests.clear();
 		}
 		
 		// Last thing we need to do is map the queryResult back onto the original query objects
-		if (this.queries.size() == 1) {
-			Query<Object> query = (Query<Object>)this.queries.getFirst();
-			query.result = queryRequest.result;
-		}
-		else if (this.queries.size() > 1) {
-			// The result is an incredibly stupid format, so we must change it. It looks like this:
-			// [{"name":"_q0","fql_result_set":[{"first_name":"Robert"}]},{"name":"_q1","fql_result_set":[{"last_name":"Dobbs"}]}]
-			Map<String, JsonNode> resultMap = new HashMap<String, JsonNode>();
-			for (JsonNode entryNode: (JsonNode)queryRequest.result) {
-				String name = entryNode.path("name").getTextValue();
-				JsonNode namedResult = entryNode.path("fql_result_set");
-				resultMap.put(name, namedResult);
+		if (queryRequest != null) {
+			if (queryRequest.response.error != null) {
+				
+				for (Query<?> query: this.queries) {
+					// Java generics suck
+					((Query<Object>)query).response = (Response<Object>)queryRequest.response;
+				}
+				
+			} else if (this.queries.size() == 1) {
+				
+				Query<Object> query = (Query<Object>)this.queries.getFirst();
+				query.response = ((OldRequest<Object>)queryRequest).response;
+				
+			} else if (this.queries.size() > 1) {
+				
+				// The result is an incredibly stupid format, so we must change it. It looks like this:
+				// [{"name":"_q0","fql_result_set":[{"first_name":"Robert"}]},{"name":"_q1","fql_result_set":[{"last_name":"Dobbs"}]}]
+				Map<String, JsonNode> resultMap = new HashMap<String, JsonNode>();
+				for (JsonNode entryNode: (JsonNode)queryRequest.response.result) {
+					String name = entryNode.path("name").getTextValue();
+					JsonNode namedResult = entryNode.path("fql_result_set");
+					resultMap.put(name, namedResult);
+				}
+				
+				// Now we match up the queries with their results
+				Iterator<Query<?>> queryIt = this.queries.iterator();
+				while (queryIt.hasNext()) {
+					Query<?> query = queryIt.next();
+					JsonNode queryResultNode = resultMap.get(query.name);
+					((Query<Object>)query).response = new Response<Object>();
+					query.response.result = this.mapper.convertValue(queryResultNode, query.resultType);
+				}
 			}
 			
-			// Now we match up the queries with their results
-			Iterator<Query<?>> queryIt = this.queries.iterator();
-			while (queryIt.hasNext()) {
-				Query<?> query = queryIt.next();
-				JsonNode queryResultNode = resultMap.get(query.name);
-				query.result = this.mapper.convertValue(queryResultNode, query.resultType);
-				queryIt.remove();
-			}
+			this.queries.clear();
 		}
 	}
 	
 	/**
 	 * Executes the specified request and stores the result in itself.
 	 */
-	private void execute(Request<?> req) throws FacebookException {
+	private void execute(Request<?> req) {
 		RequestBuilder call = new RequestBuilder("https://graph.facebook.com" + req.object, req.method);
 		
 		this.addParams(call, req.params);
 		
-		req.result = this.fetchGraph(call, req.resultType);
+		req.response = this.fetchGraph(call, req.resultType);
 	}
 	
 	/**
 	 * Executes the specified old request
 	 */
-	private void execute(OldRequest<?> req) throws FacebookException {
+	private void execute(OldRequest<?> req) {
 		
 		RequestBuilder call = new RequestBuilder("https://api.facebook.com/method/" + req.methodName, HttpMethod.GET);
 		
 		this.addParams(call, req.params);
 		
-		req.result = this.fetchOld(call, req.resultType);
+		req.response = this.fetchOld(call, req.resultType);
 	}
 	
 	/**
 	 * Executes the specified old requests, using batch.run if there are more than one
 	 */
-	private void execute(List<OldRequest<?>> requests) throws FacebookException {
+	@SuppressWarnings("unchecked")
+	private void execute(List<OldRequest<?>> requests) {
 		if (requests.size() == 1) {
 			this.execute(requests.get(0));
 		} else {
@@ -433,24 +447,37 @@ public class FacebookBatcher {
 			OldRequest<List<String>> batchRequest = new OldRequest<List<String>>("batch.run", TypeFactory.type(List.class), new Param[] { new Param("method_feed", jsonArray)});
 			this.execute(batchRequest);
 			
-			// Now we need to extract the data, it comes as a set of strings (yes, JSON in strings)
-			// in the same order as the requests.  This is what a friends.get looks like:
-			// [ "[212730,431332,710904]" ]
-			// Note also that errors can show up here, so they must be checked.
-			
-			Iterator<OldRequest<?>> requestIt = requests.iterator();
-			Iterator<String> responseIt = batchRequest.result.iterator();
-			
-			while (requestIt.hasNext()) {
-				OldRequest<?> req = requestIt.next();
-				String response = responseIt.next();
+			if (batchRequest.response.error != null) {
+				// Give the same error response to all
+				Response<Object> resp = new Response<Object>();
+				resp.error = batchRequest.response.error;
+				for (OldRequest<?> request: requests) {
+					((OldRequest<Object>)request).response = resp;
+				}
+			} else {
+				// Now we need to extract the data, it comes as a set of strings (yes, JSON in strings)
+				// in the same order as the requests.  This is what a friends.get looks like:
+				// [ "[212730,431332,710904]" ]
+				// Note also that errors can show up here, so they must be checked.
 				
-				try {
-					JsonNode root = this.mapper.readTree(response);
-					this.checkForOldApiError(root);
-					req.result = this.mapper.convertValue(root, req.resultType);
-				} catch (IOException e) {
-					throw new IOFacebookException(e);
+				Iterator<OldRequest<?>> requestIt = requests.iterator();
+				Iterator<String> responseIt = batchRequest.response.result.iterator();
+				
+				while (requestIt.hasNext()) {
+					OldRequest<Object> req = (OldRequest<Object>)requestIt.next();
+					String responseString = responseIt.next();
+					
+					req.response = new Response<Object>();
+					
+					try {
+						JsonNode root = this.mapper.readTree(responseString);
+						req.response.error = this.checkForOldApiError(root);
+						if (req.response.error != null)
+							req.response.result = this.mapper.convertValue(root, req.resultType);
+						
+					} catch (IOException e) {
+						req.response.error = new IOFacebookException(e);
+					}
 				}
 			}
 		}
@@ -506,7 +533,9 @@ public class FacebookBatcher {
 	 * If an error occurs, an exception will be thrown.  Not to be used with calls to the old
 	 * REST API, which has a different error handling mechanism.
 	 */
-	private <T> T fetchGraph(RequestBuilder call, JavaType resultType) throws FacebookException {
+	private <T> Response<T> fetchGraph(RequestBuilder call, JavaType resultType) throws FacebookException {
+		Response<T> response = new Response<T>();
+		
 		try {
 			if (log.isLoggable(Level.FINEST))
 				log.finest("Fetching: " + call);
@@ -515,36 +544,37 @@ public class FacebookBatcher {
 			
 			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK)
 			{
-				return this.mapper.readValue(conn.getInputStream(), resultType);
+				response.result = this.mapper.readValue(conn.getInputStream(), resultType);
 			}
 			else if (conn.getResponseCode() == HttpURLConnection.HTTP_BAD_REQUEST)
 			{
 				JsonNode node = this.mapper.readTree(conn.getErrorStream());
-				this.throwGraphException(node);
-				return null; // Unreachable
+				response.error = this.createGraphException(node);
 			}
 			else
 			{
-				throw new IOFacebookException("Got error " + conn.getResponseCode() + " '" + conn.getResponseMessage() + "' from " + call);
+				response.error = new IOFacebookException("Got error " + conn.getResponseCode() + " '" + conn.getResponseMessage() + "' from " + call);
 			}
 			
 		} catch (IOException e) {
-			throw new IOFacebookException("Error calling " + call, e);
+			response.error = new IOFacebookException("Error calling " + call, e);
 		}
+		
+		return response;
 	}
 	
 	/**
-	 * Takes a JSON error result from a Graph API request and throws the correct kind of error,
+	 * Takes a JSON error result from a Graph API request and returns the correct kind of error,
 	 * whatever that happens to be. It tries to match the type of the exception with an actual
 	 * exception class of the correct name.
 	 * 
-	 * If the node doesn't have a normal "error" field, an IOFacebookException is thrown.  Something
+	 * If the node doesn't have a normal "error" field, an IOFacebookException is retrned.  Something
 	 * unexpected is wrong.
 	 */
-	private void throwGraphException(JsonNode node) throws FacebookException {
+	private FacebookException createGraphException(JsonNode node) {
 		JsonNode errorNode = node.get("error");
 		if (errorNode == null) {
-			throw new IOFacebookException("Incomprehensible error response " + node.toString());
+			return new IOFacebookException("Incomprehensible error response " + node.toString());
 		} else {
 			String type = errorNode.path("type").getValueAsText();
 			String msg = errorNode.path("message").getValueAsText();
@@ -563,9 +593,9 @@ public class FacebookBatcher {
 			}
 			
 			if (throwMe != null)
-				throw throwMe;
+				return throwMe;
 			else
-				throw new FacebookException(msg);
+				return new FacebookException(msg);
 		}
 	}
 
@@ -576,7 +606,9 @@ public class FacebookBatcher {
 	 * 
 	 * This method must not be used with Graph API requests, which have a different error system.
 	 */
-	private <T> T fetchOld(RequestBuilder call, JavaType resultType) throws FacebookException {
+	private <T> Response<T> fetchOld(RequestBuilder call, JavaType resultType) {
+		Response<T> response = new Response<T>();
+		
 		try {
 			if (log.isLoggable(Level.FINEST))
 				log.finest("Fetching: " + call);
@@ -587,33 +619,38 @@ public class FacebookBatcher {
 				// We must examine the result for an error node since there is no other clue
 				JsonNode node = this.mapper.readTree(conn.getInputStream());
 				
-				this.checkForOldApiError(node);
-
-				return this.mapper.convertValue(node, resultType);
+				response.error = this.checkForOldApiError(node);
+				if (response.error == null)
+					response.result = this.mapper.convertValue(node, resultType);
 			} else {
-				throw new IOFacebookException("Got error " + conn.getResponseCode() + " '" + conn.getResponseMessage() + "' from " + call);
+				response.error = new IOFacebookException("Got error " + conn.getResponseCode() + " '" + conn.getResponseMessage() + "' from " + call);
 			}
 			
 		} catch (IOException e) {
-			throw new IOFacebookException("Error calling " + call, e);
+			response.error = new IOFacebookException("Error calling " + call, e);
 		}
+		
+		return response;
 	}
 
 	/**
-	 * Checks the tree of an old API call for errors, throwing an appropriately mapped
-	 * exception if one is found.  Does nothing if the node isn't an error case.
+	 * Checks the tree of an old API call for errors, returning an appropriately mapped
+	 * exception if one is found.  Returns null if the node is not an error node.
 	 */
-	private void checkForOldApiError(JsonNode root) throws FacebookException {
+	private FacebookException checkForOldApiError(JsonNode root) {
 		JsonNode errorCode = root.get("error_code");
+		
 		if (errorCode != null) {
 			int code = errorCode.getIntValue();
 			String msg = root.path("error_msg").getValueAsText();
 
 			switch (code) {
-				case 190: throw new OAuthException(msg);
-				case 601: throw new QueryParseException(msg);
-				default: throw new FacebookException(msg);
+				case 190: return new OAuthException(msg);
+				case 601: return new QueryParseException(msg);
+				default: return new FacebookException(msg);
 			}
 		}
+		
+		return null;
 	}
 }
