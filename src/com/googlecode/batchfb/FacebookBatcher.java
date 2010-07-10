@@ -390,7 +390,7 @@ public class FacebookBatcher {
 					Query<?> query = queryIt.next();
 					JsonNode queryResultNode = resultMap.get(query.name);
 					((Query<Object>)query).response = new Response<Object>();
-					query.response.result = this.mapper.convertValue(queryResultNode, query.resultType);
+					((Response<Object>)query.response).result = this.mapper.convertValue(queryResultNode, query.resultType);
 				}
 			}
 			
@@ -533,6 +533,7 @@ public class FacebookBatcher {
 	 * If an error occurs, an exception will be thrown.  Not to be used with calls to the old
 	 * REST API, which has a different error handling mechanism.
 	 */
+	@SuppressWarnings("unchecked")
 	private <T> Response<T> fetchGraph(RequestBuilder call, JavaType resultType) {
 		Response<T> response = new Response<T>();
 		
@@ -544,7 +545,8 @@ public class FacebookBatcher {
 			
 			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK)
 			{
-				response.result = this.mapper.readValue(conn.getInputStream(), resultType);
+				// Weird, javac (from ant) needs this cast but Eclipse doesn't. 
+				response.result = (T)this.mapper.readValue(conn.getInputStream(), resultType);
 			}
 			else if (conn.getResponseCode() == HttpURLConnection.HTTP_BAD_REQUEST)
 			{
@@ -606,6 +608,7 @@ public class FacebookBatcher {
 	 * 
 	 * This method must not be used with Graph API requests, which have a different error system.
 	 */
+	@SuppressWarnings("unchecked")
 	private <T> Response<T> fetchOld(RequestBuilder call, JavaType resultType) {
 		Response<T> response = new Response<T>();
 		
@@ -621,7 +624,7 @@ public class FacebookBatcher {
 				
 				response.error = this.checkForOldApiError(node);
 				if (response.error == null)
-					response.result = this.mapper.convertValue(node, resultType);
+					response.result = (T)this.mapper.convertValue(node, resultType);
 			} else {
 				response.error = new IOFacebookException("Got error " + conn.getResponseCode() + " '" + conn.getResponseMessage() + "' from " + call);
 			}

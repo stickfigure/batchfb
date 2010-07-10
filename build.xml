@@ -61,9 +61,22 @@
 	</target>
 
 	<target name="jar" depends="classes">
-		<jar destfile="${build.jar.file}" basedir="${build.classes.dir}">
+		<jar destfile="${build.jar.file}">
+			<manifest>
+				<attribute name="Specification-Version" value="${build.version}" />
+				<attribute name="Implementation-Version" value="${TODAY}" />
+			</manifest>
+			
 			<metainf dir="${src.dir}/META-INF">
 			</metainf>
+			
+			<fileset dir="${build.classes.dir}">
+				<exclude name="**/test/**"/>
+			</fileset>
+			<fileset dir="${src.dir}">
+				<include name="**/*.gwt.xml"/>
+				<include name="**/err/**"/>
+			</fileset>
 		</jar>
 	</target>
 	
@@ -84,14 +97,6 @@
 			<doctitle><![CDATA[<h1>BatchFB</h1>]]></doctitle>
 			<bottom><![CDATA[<i>Copyright &#169; ${YEAR} Jeff Schnitzer and a ship of thieves. All Rights Reserved. Build version: ${build.version}</i>]]></bottom>
 		</javadoc>
-	</target>
-	
-	<target name="test" depends="classes">
-		<taskdef name="testng" classpathref="run.classpath" classname="org.testng.TestNGAntTask" />
-
-		<testng classpathref="run.classpath" outputdir="${build.dir}/test-output">
-			<classfileset dir="${build.classes.dir}" includes="**/test/*.class"/>
-		</testng>
 	</target>
 	
 </project>
