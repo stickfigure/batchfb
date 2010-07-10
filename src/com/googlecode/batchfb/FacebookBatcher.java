@@ -497,11 +497,7 @@ public class FacebookBatcher {
 		else if (param.value instanceof Number)
 			return param.value.toString();
 		else
-			try {
-				return this.mapper.writeValueAsString(param.value);
-			} catch (IOException e) {
-				throw new IOFacebookException(e);
-			}
+			return JSONUtils.toJSON(param.value, this.mapper);
 	}
 	
 	/**
@@ -533,7 +529,7 @@ public class FacebookBatcher {
 	 * If an error occurs, an exception will be thrown.  Not to be used with calls to the old
 	 * REST API, which has a different error handling mechanism.
 	 */
-	private <T> Response<T> fetchGraph(RequestBuilder call, JavaType resultType) throws FacebookException {
+	private <T> Response<T> fetchGraph(RequestBuilder call, JavaType resultType) {
 		Response<T> response = new Response<T>();
 		
 		try {
