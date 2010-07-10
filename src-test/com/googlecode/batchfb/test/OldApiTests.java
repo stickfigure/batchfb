@@ -27,6 +27,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.googlecode.batchfb.FacebookBatcher;
+import com.googlecode.batchfb.FacebookException;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.Param;
 
@@ -43,10 +44,10 @@ public class OldApiTests {
 	public void simpleRequestAsNode() throws Exception {
 		FacebookBatcher batcher = new FacebookBatcher();
 
-		Later<JsonNode> node = batcher.oldApi("friends.get", new Param("uid", 1047296661));
+		Later<JsonNode> node = batcher.oldApi("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
 		Assert.assertTrue(node.get().isArray());
-		Assert.assertTrue(node.get().size() > 1);
-		Assert.assertTrue(node.get().get(0).isNumber());
+		Assert.assertEquals(1, node.get().size());
+		Assert.assertEquals(1047296661, node.get().get(0).get("uid").getIntValue());
 	}
 	
 	/**
@@ -55,14 +56,19 @@ public class OldApiTests {
 	public void twoRequestsBatched() throws Exception {
 		FacebookBatcher batcher = new FacebookBatcher();
 
-		Later<JsonNode> bob = batcher.oldApi("friends.get", new Param("uid", 1047296661));
-		Later<JsonNode> ivan = batcher.oldApi("friends.get", new Param("uid", 100000477786575L));
-		Assert.assertTrue(bob.get().isArray());
-		Assert.assertTrue(bob.get().size() > 1);
-		Assert.assertTrue(bob.get().get(0).isNumber());
+		Later<JsonNode> bob = batcher.oldApi("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
+		
+		// This method requires an API key so it will fail
+		Later<JsonNode> bob2 = batcher.oldApi("friends.get", new Param("uid", 1047296661));
 
-		Assert.assertTrue(ivan.get().isArray());
-		Assert.assertTrue(ivan.get().size() > 1);
-		Assert.assertTrue(ivan.get().get(0).isNumber());
+		// This should successfully return
+		bob.get();
+		
+		// This should throw an exception
+		try {
+			bob2.get();
+		} catch (FacebookException ex) {
+			// Do nothing
+		}
 	}
 }
