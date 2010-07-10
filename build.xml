@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+<!--
+	Build file for BatchFB.
+-->
+
+<project name="batchfb" default="jar" basedir=".">
+
+	<property name="name" value="${ant.project.name}" />
+	
+	<property file="user.properties" />
+	<property file="${user.home}/build.properties" />
+	<property file="build.properties" />
+
+	<property name="build.debug" value="on" />
+	<property name="build.deprecation" value="on" />
+
+	<property name="ant.build.javac.target" value="1.6" />
+	<property name="ant.build.javac.source" value="1.6" />
+
+	<property name="build.dir" location="target" />
+	<property name="build.classes.dir" location="${build.dir}/classes" />
+
+	<property name="build.jar.file" location="${build.dir}/${name}.jar" />
+	
+	<property name="docs.dir" value="${build.dir}/docs" />
+
+	<property name="lib.dir" location="lib" />
+	<property name="src.dir" location="src" />
+	
+	<tstamp/>
+	<tstamp>
+		<format property="YEAR" pattern="yyyy" />
+	</tstamp>
+
+	<path id="master.classpath">		
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<path id="run.classpath">
+		<pathelement location="${build.classes.dir}" />
+		<path refid="master.classpath" />
+	</path>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+	</target>
+	
+ 	<target name="classes" depends="">
+		<mkdir dir="${build.classes.dir}" />
+ 		
+		<javac srcdir="${src.dir}"
+				destdir="${build.classes.dir}"
+				debug="${build.debug}"
+				deprecation="${build.deprecation}"
+			>
+			<classpath refid="master.classpath" />
+		</javac>
+	</target>
+
+	<target name="jar" depends="classes">
+		<jar destfile="${build.jar.file}" basedir="${build.classes.dir}">
+			<metainf dir="${src.dir}/META-INF">
+			</metainf>
+		</jar>
+	</target>
+	
+	<target name="init-version">
+		<input addproperty="build.version" message="Version number?" />
+	</target>
+
+	<target name="javadoc" depends="init-version, classes">
+		<javadoc
+			destdir="${build.dir}/javadoc"
+			packagenames="*"
+			classpathref="run.classpath"
+			author="true"
+			version="true"
+			Windowtitle="BatchFB Javadoc"
+		>
+			<fileset dir="${src.dir}"/>
+			<doctitle><![CDATA[<h1>BatchFB</h1>]]></doctitle>
+			<bottom><![CDATA[<i>Copyright &#169; ${YEAR} Jeff Schnitzer and a ship of thieves. All Rights Reserved. Build version: ${build.version}</i>]]></bottom>
+		</javadoc>
+	</target>
+	
+	<target name="test" depends="classes">
+		<taskdef name="testng" classpathref="run.classpath" classname="org.testng.TestNGAntTask" />
+
+		<testng classpathref="run.classpath" outputdir="${build.dir}/test-output">
+			<classfileset dir="${build.classes.dir}" includes="**/test/*.class"/>
+		</testng>
+	</target>
+	
+</project>
