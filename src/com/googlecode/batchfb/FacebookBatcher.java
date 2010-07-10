@@ -459,6 +459,8 @@ public class FacebookBatcher {
 	private String stringifyValue(Param param) {
 		assert !(param instanceof BinaryParam);
 		
+		if (param.value instanceof String)
+			return (String)param.value;
 		if (param.value instanceof Date)
 			return Long.toString(((Date)param.value).getTime() / 1000);
 		else if (param.value instanceof Number)
