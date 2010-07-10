@@ -583,7 +583,7 @@ public class FacebookBatcher {
 			
 			// We check to see if we have an exception that matches the type, otherwise
 			// we simply throw the base FormalFacebookException
-			String proposedExceptionType = this.getClass().getPackage().getName() + "." + type;
+			String proposedExceptionType = this.getClass().getPackage().getName() + ".err." + type;
 			FacebookException throwMe = null;
 			
 			try {
