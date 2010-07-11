@@ -33,6 +33,9 @@ package com.googlecode.batchfb.err;
 public class QueryParseException extends FacebookException {
 	private static final long serialVersionUID = 1L;
 	
+	/** Make GWT happy */
+	QueryParseException() {}
+
 	public QueryParseException(String message) {
 		super(message);
 	}

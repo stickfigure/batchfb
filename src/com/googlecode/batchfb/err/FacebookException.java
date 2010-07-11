@@ -28,6 +28,9 @@ package com.googlecode.batchfb.err;
 public class FacebookException extends RuntimeException {
 	
 	private static final long serialVersionUID = 1L;
+	
+	/** Make GWT happy */
+	FacebookException() {}
 
 	/**
 	 */

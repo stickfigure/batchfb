@@ -34,6 +34,9 @@ package com.googlecode.batchfb.err;
 public class OAuthException extends FacebookException {
 	private static final long serialVersionUID = 1L;
 	
+	/** Make GWT happy */
+	OAuthException() {}
+
 	public OAuthException(String message) {
 		super(message);
 	}
