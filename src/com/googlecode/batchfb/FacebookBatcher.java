@@ -50,6 +50,7 @@ import org.codehaus.jackson.type.TypeReference;
 import com.googlecode.batchfb.err.FacebookException;
 import com.googlecode.batchfb.err.IOFacebookException;
 import com.googlecode.batchfb.err.OAuthException;
+import com.googlecode.batchfb.err.PermissionException;
 import com.googlecode.batchfb.err.QueryParseException;
 import com.googlecode.batchfb.util.FirstElementLater;
 import com.googlecode.batchfb.util.FirstNodeLater;
@@ -601,23 +602,23 @@ public class FacebookBatcher {
 			String type = errorNode.path("type").getValueAsText();
 			String msg = errorNode.path("message").getValueAsText();
 			
+			// Special case, permission exceptions are poorly structured
+			if (type.equals("Exception") && msg.startsWith("(#200)"))
+				return new PermissionException(msg);
+			
 			// We check to see if we have an exception that matches the type, otherwise
 			// we simply throw the base FormalFacebookException
 			String proposedExceptionType = this.getClass().getPackage().getName() + ".err." + type;
-			FacebookException throwMe = null;
 			
 			try {
 				Class<?> exceptionClass = Class.forName(proposedExceptionType);
 				Constructor<?> ctor = exceptionClass.getConstructor(String.class);
-				throwMe = (FacebookException)ctor.newInstance(msg);
+				return (FacebookException)ctor.newInstance(msg);
 			} catch (Exception e) {
 				// Do nothing, throwMe will stay null
 			}
 			
-			if (throwMe != null)
-				return throwMe;
-			else
-				return new FacebookException(msg);
+			return new FacebookException(msg);
 		}
 	}
 
@@ -669,6 +670,7 @@ public class FacebookBatcher {
 
 			switch (code) {
 				case 190: return new OAuthException(msg);
+				case 200: return new PermissionException(msg);
 				case 601: return new QueryParseException(msg);
 				default: return new FacebookException(msg);
 			}
