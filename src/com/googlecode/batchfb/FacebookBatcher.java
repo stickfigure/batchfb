@@ -197,15 +197,19 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Get the Jackson mapper which will be used to transform all JSON responses into objects. You can change the configuration of this mapper to
-	 * alter the mapping.
+	 * Get the Jackson mapper which will be used to transform all JSON responses into objects.
+	 * You can change the configuration of this mapper to alter the mapping.
 	 */
 	public ObjectMapper getMapper() {
 		return this.mapper;
 	}
 	
 	/**
-	 * Enqueue a normal graph call. The result will be mapped into the specified class.
+	 * Enqueue a Graph API call. The result will be mapped into the specified class.
+	 * 
+	 * @param object is the object to request, ie "me" or "1234". Doesn't need to start with "/".
+	 * @param type is the type to map the result to
+	 * @param params are optional parameters to pass to the method.
 	 */
 	public <T> Later<T> graph(String object, Class<T> type, Param... params) {
 		GraphRequest<T> req = new GraphRequest<T>(object, TypeFactory.type(type), params);
@@ -214,7 +218,11 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a normal graph call. The result will be mapped into the specified type, which can be a generic collection.
+	 * Enqueue a Graph API call. The result will be mapped into the specified type, which can be a generic collection.
+	 * 
+	 * @param object is the object to request, ie "me" or "1234". Doesn't need to start with "/".
+	 * @param type is the Jackson type reference to map the result to (see the BatchFB UserGuide).
+	 * @param params are optional parameters to pass to the method.
 	 */
 	public <T> Later<T> graph(String object, TypeReference<T> type, Param... params) {
 		GraphRequest<T> req = new GraphRequest<T>(object, TypeFactory.type(type), params);
@@ -223,32 +231,46 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a normal graph call. The result will be left as a raw Jackson node type and will not be interpreted as a Java class.
+	 * Enqueue a Graph API call. The result will be left as a raw Jackson node type and will not be interpreted as a Java class.
+	 * 
+	 * @param object is the object to request, ie "me" or "1234". Doesn't need to start with "/".
+	 * @param type is the Jackson type reference to map the result to (see the BatchFB UserGuide).
+	 * @param params are optional parameters to pass to the method.
 	 */
 	public Later<JsonNode> graph(String object, Param... params) {
 		return this.graph(object, JsonNode.class, params);
 	}
 	
 	/**
-	 * Enqueue an FQL call. All FQL calls will be grouped together into a single multiquery. The result will be interpreted as a list of the specified
-	 * java class.
+	 * Enqueue a FQL call. The result will be interpreted as a list of the specified java class.
+	 * 
+	 * @param fql is the query to run, which can include previously named query results
+	 * @param type is what the contents of the resulting list will be mapped to
 	 */
 	public <T> Later<List<T>> query(String fql, Class<T> type) {
 		return this.query(fql, type, null);
 	}
 	
 	/**
-	 * Enqueue an FQL call. All FQL calls will be grouped together into a single multiquery. The result will be left as a raw Jackson array node.
+	 * Enqueue a FQL call. The result will be left as a raw Jackson array node.
+	 * 
+	 * @param fql is the query to run, which can include previously named query results
 	 */
 	public Later<ArrayNode> query(String fql) {
 		return this.query(fql, (String)null);
 	}
 	
 	/**
-	 * Enqueue a named FQL call. The name can be used for processing in the FQL for further queries. See the Facebook documentation for multiquery for
-	 * more information.
+	 * Enqueue a named FQL call. The name allows query results to be used as a parameter to
+	 * further queries as described in the Facebook documentation for
+	 * <a href="http://developers.facebook.com/docs/reference/rest/fql.multiquery">fql.multiquery</a>
 	 * 
-	 * Note all FQL calls will be grouped together into a single multiquery.
+	 * Note: The name can only be used in further queries that are part of the same batch.
+	 * 
+	 * @param fql is the query to run, which can include previously named query results
+	 * @param type is what the contents of the resulting list will be mapped to
+	 * @param queryName must be a unique name for the batch, used as a reference for other
+	 *  queries in the batch.
 	 */
 	public <T> Later<List<T>> query(String fql, Class<T> type, String queryName) {
 		Query<List<T>> q = new Query<List<T>>(fql, queryName, TypeFactory.collectionType(ArrayList.class, type));
@@ -257,10 +279,16 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a named FQL call. The name can be used for processing in the FQL for further queries. See the Facebook documentation for multiquery for
-	 * more information.
+	 * Enqueue a named FQL call. The name allows query results to be used as a parameter to
+	 * further queries as described in the Facebook documentation for
+	 * <a href="http://developers.facebook.com/docs/reference/rest/fql.multiquery">fql.multiquery</a>
+	 * The result will be left as a Jackson array node.
 	 * 
-	 * Note all FQL calls will be grouped together into a single multiquery.
+	 * Note: The name can only be used in further queries that are part of the same batch.
+	 * 
+	 * @param fql is the query to run, which can include previously named query results
+	 * @param queryName must be a unique name for the batch, used as a reference for other
+	 *  queries in the batch.
 	 */
 	public Later<ArrayNode> query(String fql, String queryName) {
 		Query<ArrayNode> q = new Query<ArrayNode>(fql, queryName, TypeFactory.type(ArrayNode.class));
@@ -269,8 +297,8 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue an FQL call whose result will be the first value.  If there are no
-	 * results, the value will be null.  Cannot be named.
+	 * Just like query(), but retreives the first value from the result set.  If the result set
+	 * is empty, the Later<?>.get() value will be null.
 	 */
 	public <T> Later<T> queryFirst(String fql, Class<T> type) {
 		Later<List<T>> q = this.query(fql, type);
@@ -278,8 +306,8 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue an FQL call whose result will be the first value.  If there are no
-	 * results, the value will be null.  Cannot be named
+	 * Just like query(), but retreives the first value from the result set.  If the result set
+	 * is empty, the Later<?>.get() value will be null.
 	 */
 	public Later<JsonNode> queryFirst(String fql) {
 		Later<ArrayNode> q = this.query(fql);
@@ -287,7 +315,8 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a delete call. Note that delete calls cannot be batched with other calls and will always result in a separate HTTP request.
+	 * Enqueue a delete call to the Graph API. Note that delete calls cannot be batched with other calls
+	 * and will always result in a separate HTTP request.
 	 */
 	public Later<Boolean> delete(String object) {
 		GraphRequest<Boolean> req = new GraphRequest<Boolean>(object, HttpMethod.DELETE, TypeFactory.type(Boolean.class), new Param[0]);
@@ -296,7 +325,10 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a post (publish) call. Note that post calls cannot be batched with other calls and will always result in a separate HTTP request.
+	 * Enqueue a post (publish) call to the Graph API. Note that post calls cannot be batched with other
+	 * calls and will always result in a separate HTTP request.
+	 * 
+	 * @param params can include a BinaryParam to post binary objects.
 	 */
 	public Later<String> post(String object, Param... params) {
 		GraphRequest<String> req = new GraphRequest<String>(object, HttpMethod.POST, TypeFactory.type(String.class), params);
@@ -305,7 +337,9 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a request to the old REST API.
+	 * Enqueue a call to the old REST API.
+	 * 
+	 * @param methodName is the name of the method, eg "status.get"
 	 */
 	public <T> Later<T> oldRest(String methodName, Class<T> type, Param... params) {
 		OldRequest<T> req = new OldRequest<T>(methodName, TypeFactory.type(type), params);
@@ -314,7 +348,9 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a request to the old REST API.
+	 * Enqueue a call to the old REST API.
+	 * 
+	 * @param methodName is the name of the method, eg "status.get"
 	 */
 	public <T> Later<T> oldRest(String methodName, TypeReference<T> type, Param... params) {
 		OldRequest<T> req = new OldRequest<T>(methodName, TypeFactory.type(type), params);
@@ -323,7 +359,9 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a request to the old REST API.
+	 * Enqueue a call to the old REST API.
+	 * 
+	 * @param methodName is the name of the method, eg "status.get"
 	 */
 	public Later<JsonNode> oldRest(String methodName, Param... params) {
 		return this.oldRest(methodName, JsonNode.class, params);
