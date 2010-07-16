@@ -92,7 +92,7 @@ public class BasicBatchTests {
 	public void singleRequestAsNode() throws Exception {
 		FacebookBatcher batcher = new FacebookBatcher();
 		
-		Later<JsonNode> node = batcher.request("/1047296661");
+		Later<JsonNode> node = batcher.graph("/1047296661");
 		Assert.assertEquals("Robert Dobbs", node.get().get("name").getTextValue());
 	}
 	
@@ -102,7 +102,7 @@ public class BasicBatchTests {
 	public void singleRequestAsObject() throws Exception {
 		FacebookBatcher batcher = new FacebookBatcher();
 		
-		Later<User> user = batcher.request("/1047296661", User.class);
+		Later<User> user = batcher.graph("/1047296661", User.class);
 		Assert.assertEquals("Robert Dobbs", user.get().name);
 	}
 }

@@ -82,11 +82,11 @@ public class FacebookBatcher {
 	}
 	
 	/** */
-	class Command<T> implements Later<T> {
+	class Request<T> implements Later<T> {
 		JavaType resultType;
 		Response<T> response;
 		
-		public Command(JavaType resultType) {
+		public Request(JavaType resultType) {
 			this.resultType = resultType;
 		}
 		
@@ -102,16 +102,16 @@ public class FacebookBatcher {
 	}
 	
 	/** */
-	class Request<T> extends Command<T> {
+	class GraphRequest<T> extends Request<T> {
 		String object;
 		HttpMethod method;
 		Param[] params;
 		
-		public Request(String object, JavaType resultType, Param[] params) {
+		public GraphRequest(String object, JavaType resultType, Param[] params) {
 			this(object, HttpMethod.GET, resultType, params);
 		}
 		
-		public Request(String object, HttpMethod method, JavaType resultType, Param[] params) {
+		public GraphRequest(String object, HttpMethod method, JavaType resultType, Param[] params) {
 			super(resultType);
 			this.object = object.startsWith("/") ? object : "/" + object;
 			this.method = method;
@@ -120,7 +120,7 @@ public class FacebookBatcher {
 	}
 	
 	/** */
-	class Query<T> extends Command<T> {
+	class Query<T> extends Request<T> {
 		String fql;
 		String name;
 		
@@ -132,7 +132,7 @@ public class FacebookBatcher {
 	}
 	
 	/** */
-	class OldRequest<T> extends Command<T> {
+	class OldRequest<T> extends Request<T> {
 		String methodName;
 		Param[] params;
 		
@@ -162,7 +162,7 @@ public class FacebookBatcher {
 	/**
 	 * Holds a queue of all requests to execute.
 	 */
-	private LinkedList<Request<?>> requests = new LinkedList<Request<?>>();
+	private LinkedList<GraphRequest<?>> requests = new LinkedList<GraphRequest<?>>();
 	
 	/**
 	 * Holds a queue of the old rest api requests.
@@ -207,8 +207,8 @@ public class FacebookBatcher {
 	/**
 	 * Enqueue a normal graph call. The result will be mapped into the specified class.
 	 */
-	public <T> Later<T> request(String object, Class<T> type, Param... params) {
-		Request<T> req = new Request<T>(object, TypeFactory.type(type), params);
+	public <T> Later<T> graph(String object, Class<T> type, Param... params) {
+		GraphRequest<T> req = new GraphRequest<T>(object, TypeFactory.type(type), params);
 		this.requests.add(req);
 		return req;
 	}
@@ -216,8 +216,8 @@ public class FacebookBatcher {
 	/**
 	 * Enqueue a normal graph call. The result will be mapped into the specified type, which can be a generic collection.
 	 */
-	public <T> Later<T> request(String object, TypeReference<T> type, Param... params) {
-		Request<T> req = new Request<T>(object, TypeFactory.type(type), params);
+	public <T> Later<T> graph(String object, TypeReference<T> type, Param... params) {
+		GraphRequest<T> req = new GraphRequest<T>(object, TypeFactory.type(type), params);
 		this.requests.add(req);
 		return req;
 	}
@@ -225,8 +225,8 @@ public class FacebookBatcher {
 	/**
 	 * Enqueue a normal graph call. The result will be left as a raw Jackson node type and will not be interpreted as a Java class.
 	 */
-	public Later<JsonNode> request(String object, Param... params) {
-		return this.request(object, JsonNode.class, params);
+	public Later<JsonNode> graph(String object, Param... params) {
+		return this.graph(object, JsonNode.class, params);
 	}
 	
 	/**
@@ -290,7 +290,7 @@ public class FacebookBatcher {
 	 * Enqueue a delete call. Note that delete calls cannot be batched with other calls and will always result in a separate HTTP request.
 	 */
 	public Later<Boolean> delete(String object) {
-		Request<Boolean> req = new Request<Boolean>(object, HttpMethod.DELETE, TypeFactory.type(Boolean.class), new Param[0]);
+		GraphRequest<Boolean> req = new GraphRequest<Boolean>(object, HttpMethod.DELETE, TypeFactory.type(Boolean.class), new Param[0]);
 		this.requests.add(req);
 		return req;
 	}
@@ -299,7 +299,7 @@ public class FacebookBatcher {
 	 * Enqueue a post (publish) call. Note that post calls cannot be batched with other calls and will always result in a separate HTTP request.
 	 */
 	public Later<String> post(String object, Param... params) {
-		Request<String> req = new Request<String>(object, HttpMethod.POST, TypeFactory.type(String.class), params);
+		GraphRequest<String> req = new GraphRequest<String>(object, HttpMethod.POST, TypeFactory.type(String.class), params);
 		this.requests.add(req);
 		return req;
 	}
@@ -307,7 +307,7 @@ public class FacebookBatcher {
 	/**
 	 * Enqueue a request to the old REST API.
 	 */
-	public <T> Later<T> oldApi(String methodName, Class<T> type, Param... params) {
+	public <T> Later<T> oldRest(String methodName, Class<T> type, Param... params) {
 		OldRequest<T> req = new OldRequest<T>(methodName, TypeFactory.type(type), params);
 		this.oldRequests.add(req);
 		return req;
@@ -316,7 +316,7 @@ public class FacebookBatcher {
 	/**
 	 * Enqueue a request to the old REST API.
 	 */
-	public <T> Later<T> oldApi(String methodName, TypeReference<T> type, Param... params) {
+	public <T> Later<T> oldRest(String methodName, TypeReference<T> type, Param... params) {
 		OldRequest<T> req = new OldRequest<T>(methodName, TypeFactory.type(type), params);
 		this.oldRequests.add(req);
 		return req;
@@ -325,8 +325,8 @@ public class FacebookBatcher {
 	/**
 	 * Enqueue a request to the old REST API.
 	 */
-	public Later<JsonNode> oldApi(String methodName, Param... params) {
-		return this.oldApi(methodName, JsonNode.class, params);
+	public Later<JsonNode> oldRest(String methodName, Param... params) {
+		return this.oldRest(methodName, JsonNode.class, params);
 	}
 
 	/**
@@ -347,7 +347,7 @@ public class FacebookBatcher {
 		
 		// For now, handle graph requests one at a time
 		while (!this.requests.isEmpty()) {
-			Request<?> req = this.requests.removeFirst();
+			GraphRequest<?> req = this.requests.removeFirst();
 			this.execute(req);
 		}
 
@@ -422,7 +422,7 @@ public class FacebookBatcher {
 	/**
 	 * Executes the specified request and stores the result in itself.
 	 */
-	private void execute(Request<?> req) {
+	private void execute(GraphRequest<?> req) {
 		RequestBuilder call = new RequestBuilder("https://graph.facebook.com" + req.object, req.method);
 		
 		this.addParams(call, req.params);

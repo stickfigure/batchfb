@@ -44,7 +44,7 @@ public class ExceptionTests {
   public void makeOAuthException() throws Exception {
     FacebookBatcher batcher = new FacebookBatcher("asdf");
     
-    Later<JsonNode> node = batcher.request("/me");
+    Later<JsonNode> node = batcher.graph("/me");
     node.get();
   }
   
@@ -55,7 +55,7 @@ public class ExceptionTests {
   public void makeQueryParseException() throws Exception {
     FacebookBatcher batcher = new FacebookBatcher();
     
-    Later<JsonNode> node = batcher.request("/me");
+    Later<JsonNode> node = batcher.graph("/me");
     node.get();
   }
 }

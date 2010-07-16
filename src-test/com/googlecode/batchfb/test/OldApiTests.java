@@ -44,7 +44,7 @@ public class OldApiTests {
 	public void simpleRequestAsNode() throws Exception {
 		FacebookBatcher batcher = new FacebookBatcher();
 
-		Later<JsonNode> node = batcher.oldApi("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
+		Later<JsonNode> node = batcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
 		Assert.assertTrue(node.get().isArray());
 		Assert.assertEquals(1, node.get().size());
 		Assert.assertEquals(1047296661, node.get().get(0).get("uid").getIntValue());
@@ -56,10 +56,10 @@ public class OldApiTests {
 	public void twoRequestsBatched() throws Exception {
 		FacebookBatcher batcher = new FacebookBatcher();
 
-		Later<JsonNode> bob = batcher.oldApi("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
+		Later<JsonNode> bob = batcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
 		
 		// This method requires an API key so it will fail
-		Later<JsonNode> bob2 = batcher.oldApi("friends.get", new Param("uid", 1047296661));
+		Later<JsonNode> bob2 = batcher.oldRest("friends.get", new Param("uid", 1047296661));
 
 		// This should successfully return
 		bob.get();
