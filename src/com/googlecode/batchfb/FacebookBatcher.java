@@ -160,9 +160,9 @@ public class FacebookBatcher {
 	private LinkedList<Query<?>> queries = new LinkedList<Query<?>>();
 	
 	/**
-	 * Holds a queue of all requests to execute.
+	 * Holds a queue of all graph requests to execute.
 	 */
-	private LinkedList<GraphRequest<?>> requests = new LinkedList<GraphRequest<?>>();
+	private LinkedList<GraphRequest<?>> graphRequests = new LinkedList<GraphRequest<?>>();
 	
 	/**
 	 * Holds a queue of the old rest api requests.
@@ -209,7 +209,7 @@ public class FacebookBatcher {
 	 */
 	public <T> Later<T> graph(String object, Class<T> type, Param... params) {
 		GraphRequest<T> req = new GraphRequest<T>(object, TypeFactory.type(type), params);
-		this.requests.add(req);
+		this.graphRequests.add(req);
 		return req;
 	}
 	
@@ -218,7 +218,7 @@ public class FacebookBatcher {
 	 */
 	public <T> Later<T> graph(String object, TypeReference<T> type, Param... params) {
 		GraphRequest<T> req = new GraphRequest<T>(object, TypeFactory.type(type), params);
-		this.requests.add(req);
+		this.graphRequests.add(req);
 		return req;
 	}
 	
@@ -291,7 +291,7 @@ public class FacebookBatcher {
 	 */
 	public Later<Boolean> delete(String object) {
 		GraphRequest<Boolean> req = new GraphRequest<Boolean>(object, HttpMethod.DELETE, TypeFactory.type(Boolean.class), new Param[0]);
-		this.requests.add(req);
+		this.graphRequests.add(req);
 		return req;
 	}
 	
@@ -300,7 +300,7 @@ public class FacebookBatcher {
 	 */
 	public Later<String> post(String object, Param... params) {
 		GraphRequest<String> req = new GraphRequest<String>(object, HttpMethod.POST, TypeFactory.type(String.class), params);
-		this.requests.add(req);
+		this.graphRequests.add(req);
 		return req;
 	}
 	
@@ -346,8 +346,8 @@ public class FacebookBatcher {
 		// TODO: execute all requests asynchronously in parallel
 		
 		// For now, handle graph requests one at a time
-		while (!this.requests.isEmpty()) {
-			GraphRequest<?> req = this.requests.removeFirst();
+		while (!this.graphRequests.isEmpty()) {
+			GraphRequest<?> req = this.graphRequests.removeFirst();
 			this.execute(req);
 		}
 
