@@ -669,9 +669,14 @@ public class FacebookBatcher {
 			String msg = root.path("error_msg").getValueAsText();
 
 			switch (code) {
+				case 102:
 				case 190: return new OAuthException(msg);
+				
 				case 200: return new PermissionException(msg);
+				
+				case 101:
 				case 601: return new QueryParseException(msg);
+				
 				default: return new FacebookException(msg);
 			}
 		}
