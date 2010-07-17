@@ -29,7 +29,8 @@ import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.err.FacebookException;
 
 /**
- * <p>Adapter which pulls out the first node of an array.</p>
+ * <p>Adapter which pulls out the first node of an array.  Returns null if
+ * there is no first node.</p>
  * 
  * @author Jeff Schnitzer
  */
@@ -43,7 +44,8 @@ public class FirstNodeLater implements Later<JsonNode> {
 		this.base = base;
 	}
 	
-	/**
+	/* (non-Javadoc)
+	 * @see com.googlecode.batchfb.Later#get()
 	 */
 	@Override
 	public JsonNode get() throws FacebookException {

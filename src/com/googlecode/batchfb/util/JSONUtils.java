@@ -29,7 +29,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.googlecode.batchfb.err.FacebookException;
 
 /**
- * Some handy methods for manipulating JSON
+ * Some handy methods for working with JSON
  * 
  * @author Jeff Schnitzer
  */

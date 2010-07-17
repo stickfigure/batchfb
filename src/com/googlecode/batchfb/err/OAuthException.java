@@ -23,11 +23,14 @@
 package com.googlecode.batchfb.err;
 
 /**
- * <p>Thrown when Facebook returns an OAuthException error.  This indicates that there is a
- * problem with the provided access token; for example, it may have expired.</p>
+ * <p>Thrown when Facebook indicates that there is a problem with the provided access token;
+ * for example, it may have expired.</p>
  * 
  * <p>Note that this is NOT thrown when an access token is not provided to
  * methods that require it.  That produces a type:"QueryParseException".</p>
+ * 
+ * <p>While the name of this exception is derived from the error produced by the Graph API,
+ * BatchFB will throw this exception when the Old REST API produces an "equivalent" error.</p>
  * 
  * @author Jeff Schnitzer
  */

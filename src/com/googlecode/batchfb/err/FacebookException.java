@@ -23,6 +23,9 @@
 package com.googlecode.batchfb.err;
 
 /**
+ * Root of the exception hierarchy for BatchFB.  A raw FacebookException will
+ * be thrown when a more specific exception type cannot be determined.
+ * 
  * @author Jeff Schnitzer
  */
 public class FacebookException extends RuntimeException {

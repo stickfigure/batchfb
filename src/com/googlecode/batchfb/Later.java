@@ -26,15 +26,23 @@ import com.googlecode.batchfb.err.FacebookException;
 
 /**
  * <p>Similar to java.concurrent.Future; allows a return value to be defined sometime in
- * the future. This provides the ability to batch operations into groups.</p>
+ * the future. This provides the ability to separate the request from execution, and allows
+ * the backend to optimize the actual collection of data.</p>
  * 
  * @author Jeff Schnitzer
  */
 public interface Later<T> {
 	/**
-	 * Get the value, triggering execution of the batch if necessary.
+	 * <p>Get the value, triggering execution of the batch if necessary.  Once the batch
+	 * has been executed, this method can be called repeatedly without incurring further
+	 * calls to Facebook or triggering the execution of any subsequently created batches.
+	 * It is as efficient as a simple value getter.</p>
 	 * 
-	 * @throws FacebookException if anything goes wrong with the Facebook interaction
+	 * <p>If the Facebook call produced an error, repeated calls to this method will produce
+	 * the same exception.  BatchFB will *not* retry a Facebook call; you must create a
+	 * new Later<?> object from the FacebookBatcher class.</p>
+	 * 
+	 * @throws FacebookException if anything went wrong with the Facebook interaction
 	 */
 	T get() throws FacebookException;
 }

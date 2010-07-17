@@ -24,9 +24,12 @@ package com.googlecode.batchfb.err;
 
 
 /**
- * <p>Thrown when Facebook returns a QueryParseException error.  Indicates that
- * there was something wrong with the construction of the query (eg, you need
- * an access token but didn't provide one).</p>
+ * <p>Indicates that there was something wrong with the construction of a request
+ * to facebook (eg, you need an access token but didn't provide one).  It's not
+ * specific to FQL, despite the name.</p>
+ * 
+ * <p>While the name of this exception is derived from the error produced by the Graph API,
+ * BatchFB will throw this exception when the Old REST API produces an "equivalent" error.</p>
  * 
  * @author Jeff Schnitzer
  */

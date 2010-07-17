@@ -23,8 +23,13 @@
 package com.googlecode.batchfb.err;
 
 /**
- * Thrown when a request to facebook times out or produces a http error code or returns totally bogus data.
- * This kind of thing happens frequently and unpredictably.
+ * <p>Thrown when a request to facebook times out or produces a http error code or returns totally
+ * bogus data.  It may also happen if something goes wrong with JSON mapping.  This exception
+ * is roughly equivalent to an unchecked version of IOException.</p>
+ * 
+ * <p>If this exception is insufficently granular (say, you need to distinguish JSON mapping
+ * from HTTP errors), post an enhancement request to the BatchFB
+ * <a href="http://code.google.com/p/batchfb/issues/list">issue tracker</a>.</p>
  * 
  * @author Jeff Schnitzer
  */

@@ -23,7 +23,7 @@
 package com.googlecode.batchfb;
 
 /**
- * A single parameter to a Facebook API request
+ * A single key/value parameter to a Facebook API request. 
  * 
  * @author Jeff Schnitzer
  */
@@ -36,6 +36,7 @@ public class Param {
   public final Object value;
 
   /**
+   * @param value must be something that can be converted to a String with toString().
    */
   public Param(String name, Object value) {
     this.name = name;
@@ -43,7 +44,7 @@ public class Param {
   }
 
   /**
-   * @see java.lang.Object#toString()
+   * @return a version useful for debugging.
    */
   @Override
   public String toString() {

@@ -25,7 +25,7 @@ package com.googlecode.batchfb;
 import java.io.InputStream;
 
 /**
- * A parameter which includes a binary attachment. These can only be used with post() requests.
+ * <p>A parameter which includes a binary attachment. These can only be used with post() requests.</p>
  * 
  * @author Jeff Schnitzer
  */

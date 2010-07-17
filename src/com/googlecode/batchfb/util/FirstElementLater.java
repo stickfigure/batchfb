@@ -28,7 +28,8 @@ import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.err.FacebookException;
 
 /**
- * <p>Adapter which pulls out the first element of a list.</p>
+ * <p>Adapter which pulls out the first element of a list.  Returns null
+ * if the list does not have a first element.</p>
  * 
  * @author Jeff Schnitzer
  */
@@ -42,7 +43,8 @@ public class FirstElementLater<T> implements Later<T> {
 		this.base = base;
 	}
 	
-	/**
+	/* (non-Javadoc)
+	 * @see com.googlecode.batchfb.Later#get()
 	 */
 	@Override
 	public T get() throws FacebookException {

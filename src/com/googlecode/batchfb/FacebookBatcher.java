@@ -61,9 +61,24 @@ import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
 
 /**
  * <p>
- * Low-ish level class which interacts with the Facebook Graph API, batching requests into a minimal number of separate FB calls and using Jackson to
- * parse the result into user-friendly Java classes.
+ * Interface to the Facebook APIs which allows you to define all of your requests
+ * (graph, fql, and old rest) in advance and execute them in an optimal set of actual
+ * http calls to Facebook.  Normal result values are mapped using Jackson; error
+ * results are unified into a standard exception hierarchy.
  * </p>
+ * 
+ * <p>Three types of batching are currently supported:</p>
+ * 
+ * <ul>
+ * <li>Graph API calls with a common http method (ie GET vs POST) and identical parameters
+ * are batched into a single graph call with ids=id1,id2,id3.</li>
+ * <li>FQL calls are batched into a single multiquery.</li>
+ * <li>Old REST API calls (including the query/multiquery) are batched into a single
+ * batch.run call.</li>
+ * </ul>
+ * 
+ * <p>See the <a href="http://code.google.com/p/batchfb/wiki/UserGuide">User Guide</a>
+ * for more information about how to use this class.</p>
  * 
  * @author Jeff Schnitzer
  */
@@ -158,11 +173,11 @@ public class FacebookBatcher {
 	 * Holds a queue of all queries to execute.
 	 */
 	private LinkedList<Query<?>> queries = new LinkedList<Query<?>>();
-	
+
 	/**
-	 * Holds a queue of all graph requests to execute.
+	 * Holds (and groups properly) all the graph requests.
 	 */
-	private LinkedList<GraphRequest<?>> graphRequests = new LinkedList<GraphRequest<?>>();
+	private GraphRequestGrouper graphRequests = new GraphRequestGrouper();
 	
 	/**
 	 * Holds a queue of the old rest api requests.
@@ -380,15 +395,17 @@ public class FacebookBatcher {
 		// There is a lot of room for optimization and parallelization here.
 		// All queries are combined into a single multiquery.
 		// All legacy queries (including fql) are combined in a single batch.run
-		// TODO: all single-id requests with the same params set can be combined
+		// All graph requests with common params and http method can be combined
 		// TODO: execute all requests asynchronously in parallel
 		
-		// For now, handle graph requests one at a time
-		while (!this.graphRequests.isEmpty()) {
-			GraphRequest<?> req = this.graphRequests.removeFirst();
-			this.execute(req);
+		// Handle graph requests in groups
+		Iterator<LinkedList<GraphRequest<?>>> graphRequestGroupIt = this.graphRequests.iterator();
+		while (graphRequestGroupIt.hasNext()) {
+			LinkedList<GraphRequest<?>> group = graphRequestGroupIt.next();
+			this.executeGraphGroup(group);
+			graphRequestGroupIt.remove();
 		}
-
+		
 		// If we have any queries, we create a fake OldRequest to process in batch with any real OldRequests
 		OldRequest<?> queryRequest = null;
 		
@@ -458,13 +475,66 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Executes the specified request and stores the result in itself.
+	 * Executes a properly grouped set of graph requests as a single facebook call.
+	 * @param group must all have the same http method and params 
 	 */
-	private void execute(GraphRequest<?> req) {
+	@SuppressWarnings("unchecked")
+	private void executeGraphGroup(LinkedList<GraphRequest<?>> group) {
+		if (group.size() == 1) {
+			// This is easy enough we should just special-case it and remove the
+			// overhead of generating the intermediate JsonNode graph.
+			this.executeSingle(group.getFirst());
+		} else {
+			// The http method and params will be the same for all, so use the first
+			GraphRequest<?> first = group.getFirst();
+			
+			RequestBuilder call = new RequestBuilder("https://graph.facebook.com", first.method);
+			
+			// We add the generated ids first because of the case where the user chose
+			// to specify all the ids as a Param explicitly.  If that happens, the
+			// generated ids field will be bogus, but it will be overwritten when the
+			// explicit params are added.  It is a little odd and it seems like allowing
+			// users to specify ids as a param is a bad idea, but it all works out so WTH.
+			call.addParam("ids", this.createIdsString(group));
+			this.addParams(call, first.params);
+			
+			Response<JsonNode> response = this.fetchGraph(call, JSON_NODE_TYPE);
+			if (response.error != null) {
+				for (GraphRequest<?> req: group)
+					((GraphRequest)req).response = response;
+			} else {
+				for (GraphRequest<?> req: group) {
+					((GraphRequest)req).response = new Response<Object>();
+					req.response.result = this.mapper.convertValue(response.result, req.resultType);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Creates the ids= parameter for a group of graph requests.
+	 */
+	private String createIdsString(Iterable<GraphRequest<?>> group) {
+		StringBuilder bld = null;
+		
+		for (GraphRequest<?> req: group) {
+			if (bld == null)
+				bld = new StringBuilder();
+			else
+				bld.append(',');
+			
+			bld.append(req.object);
+		}
+		
+		return bld.toString();
+	}
+	
+	/**
+	 * Executes a single graph request as a standalone request and stores the result in itself.
+	 */
+	private void executeSingle(GraphRequest<?> req) {
 		RequestBuilder call = new RequestBuilder("https://graph.facebook.com" + req.object, req.method);
-		
 		this.addParams(call, req.params);
-		
 		req.response = this.fetchGraph(call, req.resultType);
 	}
 	

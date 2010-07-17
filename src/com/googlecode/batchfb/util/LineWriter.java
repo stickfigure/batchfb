@@ -28,8 +28,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
 /**
- * Somewhat similar to a PrintWriter but uses CRLF as the
- * end of line marker.
+ * Somewhat similar to a PrintWriter but uses CRLF as the end of line marker.
+ * Handy when when working with relics like the MIME specification.
  */
 public final class LineWriter extends BufferedWriter {
 	
