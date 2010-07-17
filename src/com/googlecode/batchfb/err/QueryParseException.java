@@ -25,8 +25,12 @@ package com.googlecode.batchfb.err;
 
 /**
  * <p>Indicates that there was something wrong with the construction of a request
- * to facebook (eg, you need an access token but didn't provide one).  It's not
- * specific to FQL, despite the name.</p>
+ * to facebook.  It's not specific to FQL, despite the name.</p>
+ * 
+ * <p>This exception is produced when calling graph methods to /me without
+ * an access token.  Other graph methods that require access tokens (for example,
+ * markzuckerberg/friends) produce an OAuthAccessTokenException error when you
+ * neglected to use a token.  Facebook treats /me specially.</p>
  * 
  * <p>While the name of this exception is derived from the error produced by the Graph API,
  * BatchFB will throw this exception when the Old REST API produces an "equivalent" error.</p>

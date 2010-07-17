@@ -767,6 +767,8 @@ public class FacebookBatcher {
 	/**
 	 * Checks the tree of an old API call for errors, returning an appropriately mapped
 	 * exception if one is found.  Returns null if the node is not an error node.
+	 * 
+	 * This relies heavily on http://wiki.developers.facebook.com/index.php/Error_codes
 	 */
 	private FacebookException checkForOldApiError(JsonNode root) {
 		JsonNode errorCode = root.get("error_code");
@@ -776,15 +778,17 @@ public class FacebookBatcher {
 			String msg = root.path("error_msg").getValueAsText();
 
 			switch (code) {
+				case 101:
 				case 102:
 				case 190: return new OAuthException(msg);
 				
-				case 200: return new PermissionException(msg);
-				
-				case 101:
-				case 601: return new QueryParseException(msg);
-				
-				default: return new FacebookException(msg);
+				default:
+					if (code >= 200 && code < 300)
+						return new PermissionException(msg);
+					else if (code >= 600 && code < 700)
+						return new QueryParseException(msg);
+					else
+						return new FacebookException(msg);
 			}
 		}
 		

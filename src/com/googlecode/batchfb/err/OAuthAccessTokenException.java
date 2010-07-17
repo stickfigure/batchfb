@@ -23,30 +23,22 @@
 package com.googlecode.batchfb.err;
 
 /**
- * <p>Indicates something has failed in the authorization of your application.
- * Unfortunately Facebook is somewhat erratic about the errors it produces:</p>
+ * <p>Indicates something is wrong with the access token you have (or should have)
+ * passed to Facebook.  However, this is only thrown in a few cases - many other
+ * token problems produce the base OAuthException.  Because Facebook is erratic
+ * about this, you should catch the base OAuthException instead of directly trying
+ * to catch this exception.</p>
  * 
- * <ul>
- * <li>Calling http://graph.facebook.com/me/friends without a token produces QueryParseException</li>
- * <li>Calling http://graph.facebook.com/markzuckerberg/friends without a token produces OAuthAccessTokenException</li>
- * <li>Calling any graph method with a malformed access token produces OAuthException</li>
- * <li>Calling any graph method with an expired access token produces OAuthException</li>
- * </ul>
- * 
- * <p>In general, you should be wary of catching exceptions more specific than OAuthException.</p> 
- * 
- * <p>While the name of this exception is derived from the error produced by the Graph API,
- * BatchFB will throw this exception when the Old REST API produces an "equivalent" error.</p>
- * 
+ * @see OAuthException
  * @author Jeff Schnitzer
  */
-public class OAuthException extends FacebookException {
+public class OAuthAccessTokenException extends OAuthException {
 	private static final long serialVersionUID = 1L;
 	
 	/** Make GWT happy */
-	OAuthException() {}
+	OAuthAccessTokenException() {}
 
-	public OAuthException(String message) {
+	public OAuthAccessTokenException(String message) {
 		super(message);
 	}
 }
