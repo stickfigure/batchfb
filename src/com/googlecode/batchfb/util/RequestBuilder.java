@@ -169,7 +169,7 @@ public class RequestBuilder {
 	/**
 	 * Write out params as multipart/form-data, including any binary attachments.
 	 * 
-	 * @see http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
+	 * See <a href="http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4">http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4</a>.
 	 */
 	protected void writeMultipart(HttpURLConnection conn) throws IOException {
 		conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + MULTIPART_BOUNDARY);

@@ -249,7 +249,6 @@ public class FacebookBatcher {
 	 * Enqueue a Graph API call. The result will be left as a raw Jackson node type and will not be interpreted as a Java class.
 	 * 
 	 * @param object is the object to request, ie "me" or "1234". Doesn't need to start with "/".
-	 * @param type is the Jackson type reference to map the result to (see the BatchFB UserGuide).
 	 * @param params are optional parameters to pass to the method.
 	 */
 	public Later<JsonNode> graph(String object, Param... params) {
