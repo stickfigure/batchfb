@@ -55,7 +55,7 @@ public class ConnectionTests extends TestBase {
    */
   @Test
   public void pagedMethod() throws Exception {
-    PagedLater<Object> feed = this.authBatcher.paged("me/friends", Object.class);
+    PagedLater<Object> feed = this.authBatcher.paged("me/home", Object.class);
     
     Assert.assertFalse(feed.get().isEmpty());
     
