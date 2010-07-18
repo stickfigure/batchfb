@@ -52,11 +52,13 @@ import com.googlecode.batchfb.err.IOFacebookException;
 import com.googlecode.batchfb.err.OAuthException;
 import com.googlecode.batchfb.err.PermissionException;
 import com.googlecode.batchfb.err.QueryParseException;
+import com.googlecode.batchfb.type.Paged;
 import com.googlecode.batchfb.util.FirstElementLater;
 import com.googlecode.batchfb.util.FirstNodeLater;
 import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.RequestBuilder;
 import com.googlecode.batchfb.util.StringUtils;
+import com.googlecode.batchfb.util.URLParser;
 import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
 
 /**
@@ -86,6 +88,10 @@ public class FacebookBatcher {
 	
 	/** */
 	private static final Logger log = Logger.getLogger(FacebookBatcher.class.getName());
+	
+	/** */
+	public static final String GRAPH_ENDPOINT = "https://graph.facebook.com/";
+	public static final String OLD_REST_ENDPOINT = "https://api.facebook.com/method/";
 	
 	/** */
 	private static final JavaType JSON_NODE_TYPE = TypeFactory.type(JsonNode.class);
@@ -126,9 +132,10 @@ public class FacebookBatcher {
 			this(object, HttpMethod.GET, resultType, params);
 		}
 		
+		/** Strips off any leading / from object */
 		public GraphRequest(String object, HttpMethod method, JavaType resultType, Param[] params) {
 			super(resultType);
-			this.object = object.startsWith("/") ? object : "/" + object;
+			this.object = object.startsWith("/") ? object.substring(1) : object;
 			this.method = method;
 			this.params = params;
 		}
@@ -155,6 +162,68 @@ public class FacebookBatcher {
 			super(resultType);
 			this.methodName = methodName;
 			this.params = params;
+		}
+	}
+	
+	/** Provides paging ability */
+	class PagedLaterAdapter<T> implements PagedLater<T> {
+		GraphRequest<Paged<T>> request;
+		
+		/** The type of T **/
+		JavaType type;
+
+		/**
+		 * @param req is the request to wrap
+		 * @param type is the type of T, the thing we are paging across (ie not Paged<T>)
+		 */
+		public PagedLaterAdapter(GraphRequest<Paged<T>> req, JavaType type) {
+			this.request = req;
+			this.type = type;
+		}
+		
+		@Override
+		public List<T> get() throws FacebookException {
+			return this.request.get().getData();
+		}
+
+		@Override
+		public PagedLater<T> next()
+		{
+			if (this.request.get().getPaging() == null)
+				return null;
+			else
+				return this.createRequest(this.request.get().getPaging().getNext());
+		}
+
+		@Override
+		public PagedLater<T> previous()
+		{
+			if (this.request.get().getPaging() == null)
+				return null;
+			else
+				return this.createRequest(this.request.get().getPaging().getPrevious());
+		}
+		
+		/**
+		 * Unfortunately we need to parse the url to create a new GraphRequest<?>.
+		 * It's not strictly necessary; we could create a new type of GraphRequest that
+		 * merely issues the http request as-is, but this would eliminate any future
+		 * option of grouping these requests.  You can't group connection requests
+		 * right now but maybe that will change in the future.  Also, this keeps the
+		 * rest of the code much simpler.
+		 * 
+		 * @param pagedUrl is a paging url, either next or previous
+		 */
+		private PagedLater<T> createRequest(String pagedUrl)
+		{
+			// Parse the url to create a new GraphRequest<Paged<T>>.
+			URLParser parser = new URLParser(pagedUrl);
+			
+			// Need to remove the access token, that gets added back later and isn't
+			// relevant for grouping.
+			parser.getParams().remove("access_token");
+			
+			return paged(parser.getPath(), this.type, parser.getParamsAsArray());
 		}
 	}
 	
@@ -222,27 +291,23 @@ public class FacebookBatcher {
 	/**
 	 * Enqueue a Graph API call. The result will be mapped into the specified class.
 	 * 
-	 * @param object is the object to request, ie "me" or "1234". Doesn't need to start with "/".
+	 * @param object is the object to request, eg "me" or "1234". Doesn't need to start with "/".
 	 * @param type is the type to map the result to
 	 * @param params are optional parameters to pass to the method.
 	 */
 	public <T> Later<T> graph(String object, Class<T> type, Param... params) {
-		GraphRequest<T> req = new GraphRequest<T>(object, TypeFactory.type(type), params);
-		this.graphRequests.add(req);
-		return req;
+		return this.graph(object, TypeFactory.type(type), params);
 	}
 	
 	/**
 	 * Enqueue a Graph API call. The result will be mapped into the specified type, which can be a generic collection.
 	 * 
-	 * @param object is the object to request, ie "me" or "1234". Doesn't need to start with "/".
+	 * @param object is the object to request, eg "me" or "1234". Doesn't need to start with "/".
 	 * @param type is the Jackson type reference to map the result to (see the BatchFB UserGuide).
 	 * @param params are optional parameters to pass to the method.
 	 */
 	public <T> Later<T> graph(String object, TypeReference<T> type, Param... params) {
-		GraphRequest<T> req = new GraphRequest<T>(object, TypeFactory.type(type), params);
-		this.graphRequests.add(req);
-		return req;
+		return this.graph(object, TypeFactory.type(type), params);
 	}
 	
 	/**
@@ -252,7 +317,52 @@ public class FacebookBatcher {
 	 * @param params are optional parameters to pass to the method.
 	 */
 	public Later<JsonNode> graph(String object, Param... params) {
-		return this.graph(object, JsonNode.class, params);
+		return this.graph(object, JSON_NODE_TYPE, params);
+	}
+	
+	/**
+	 * The actual implementation of this, after we've converted to proper Jackson JavaType
+	 */
+	private <T> Later<T> graph(String object, JavaType type, Param... params) {
+		GraphRequest<T> req = new GraphRequest<T>(object, type, params);
+		this.graphRequests.add(req);
+		return req;
+	}
+	
+	/**
+	 * <p>Enqueue a Graph API call to an endpoint that results in paginated data.  Any of the
+	 * Facebook "connections" fit this pattern; the results look like:</p>
+	 * 
+	 * {@code
+	 * { data:[{...},{...}], paging:{previous:"http://blahblah", next:"http://blahblah"} }
+	 * }
+	 * 
+	 * The PagedLater<?> returned from this method can be used to navigate forwards and
+	 * backwards in the pagination.  For example, you could have a PagedLater<User> that
+	 * provides the list of User objects plus additional PagedLater<User> for the next
+	 * and previous pages.
+	 * 
+	 * @param object is the connection object to request, eg "me/friends" or "1234/feed". Doesn't need to start with "/".
+	 * @param type is the type of the element that will be paged across
+	 * @param params are optional parameters to pass to the method.
+	 */
+	public <T> PagedLater<T> paged(String object, Class<T> type, Param... params) {
+		return this.paged(object, TypeFactory.type(type), params);
+	}
+	
+	/**
+	 * Implementation of this after we have T converted to a proper Jackson JavaType.
+	 */
+	private <T> PagedLater<T> paged(String object, JavaType type, Param... params) {
+		if (!object.contains("/"))
+			throw new IllegalArgumentException("You can only use paged() for connection requests, eg me/friends");
+
+		// For example if type is User.class, this will produce Paged<User>
+		JavaType pagedType = TypeFactory.parametricType(Paged.class, type);
+			
+		GraphRequest<Paged<T>> req = new GraphRequest<Paged<T>>(object, pagedType, params);
+		this.graphRequests.add(req);
+		return new PagedLaterAdapter<T>(req, type);
 	}
 	
 	/**
@@ -287,9 +397,7 @@ public class FacebookBatcher {
 	 *  queries in the batch.
 	 */
 	public <T> Later<List<T>> query(String fql, Class<T> type, String queryName) {
-		Query<List<T>> q = new Query<List<T>>(fql, queryName, TypeFactory.collectionType(ArrayList.class, type));
-		this.queries.add(q);
-		return q;
+		return this.query(fql, queryName, TypeFactory.collectionType(ArrayList.class, type));
 	}
 	
 	/**
@@ -305,13 +413,20 @@ public class FacebookBatcher {
 	 *  queries in the batch.
 	 */
 	public Later<ArrayNode> query(String fql, String queryName) {
-		Query<ArrayNode> q = new Query<ArrayNode>(fql, queryName, TypeFactory.type(ArrayNode.class));
+		return this.query(fql, queryName, TypeFactory.type(ArrayNode.class));
+	}
+	
+	/**
+	 * Implementation now that we have chosen a Jackson JavaType for the return value
+	 */
+	private <T> Later<T> query(String fql, String queryName, JavaType type) {
+		Query<T> q = new Query<T>(fql, queryName, type);
 		this.queries.add(q);
 		return q;
 	}
 	
 	/**
-	 * Just like query(), but retreives the first value from the result set.  If the result set
+	 * Just like query(), but retrieves the first value from the result set.  If the result set
 	 * is empty, the Later<?>.get() value will be null.
 	 */
 	public <T> Later<T> queryFirst(String fql, Class<T> type) {
@@ -320,7 +435,7 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Just like query(), but retreives the first value from the result set.  If the result set
+	 * Just like query(), but retrieves the first value from the result set.  If the result set
 	 * is empty, the Later<?>.get() value will be null.
 	 */
 	public Later<JsonNode> queryFirst(String fql) {
@@ -356,9 +471,7 @@ public class FacebookBatcher {
 	 * @param methodName is the name of the method, eg "status.get"
 	 */
 	public <T> Later<T> oldRest(String methodName, Class<T> type, Param... params) {
-		OldRequest<T> req = new OldRequest<T>(methodName, TypeFactory.type(type), params);
-		this.oldRequests.add(req);
-		return req;
+		return this.oldRest(methodName, TypeFactory.type(type), params);
 	}
 	
 	/**
@@ -367,9 +480,7 @@ public class FacebookBatcher {
 	 * @param methodName is the name of the method, eg "status.get"
 	 */
 	public <T> Later<T> oldRest(String methodName, TypeReference<T> type, Param... params) {
-		OldRequest<T> req = new OldRequest<T>(methodName, TypeFactory.type(type), params);
-		this.oldRequests.add(req);
-		return req;
+		return this.oldRest(methodName, TypeFactory.type(type), params);
 	}
 	
 	/**
@@ -378,7 +489,16 @@ public class FacebookBatcher {
 	 * @param methodName is the name of the method, eg "status.get"
 	 */
 	public Later<JsonNode> oldRest(String methodName, Param... params) {
-		return this.oldRest(methodName, JsonNode.class, params);
+		return this.oldRest(methodName, JSON_NODE_TYPE, params);
+	}
+	
+	/**
+	 * Implementation after we have discovered Jackson JavaType.
+	 */
+	private <T> Later<T> oldRest(String methodName, JavaType type, Param... params) {
+		OldRequest<T> req = new OldRequest<T>(methodName, type, params);
+		this.oldRequests.add(req);
+		return req;
 	}
 
 	/**
@@ -487,7 +607,7 @@ public class FacebookBatcher {
 			// The http method and params will be the same for all, so use the first
 			GraphRequest<?> first = group.getFirst();
 			
-			RequestBuilder call = new RequestBuilder("https://graph.facebook.com", first.method);
+			RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT, first.method);
 			
 			// We add the generated ids first because of the case where the user chose
 			// to specify all the ids as a Param explicitly.  If that happens, the
@@ -532,7 +652,7 @@ public class FacebookBatcher {
 	 * Executes a single graph request as a standalone request and stores the result in itself.
 	 */
 	private void executeSingle(GraphRequest<?> req) {
-		RequestBuilder call = new RequestBuilder("https://graph.facebook.com" + req.object, req.method);
+		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + req.object, req.method);
 		this.addParams(call, req.params);
 		req.response = this.fetchGraph(call, req.resultType);
 	}
@@ -542,7 +662,7 @@ public class FacebookBatcher {
 	 */
 	private void execute(OldRequest<?> req) {
 		
-		RequestBuilder call = new RequestBuilder("https://api.facebook.com/method/" + req.methodName, HttpMethod.GET);
+		RequestBuilder call = new RequestBuilder(OLD_REST_ENDPOINT + req.methodName, HttpMethod.GET);
 		
 		this.addParams(call, req.params);
 		

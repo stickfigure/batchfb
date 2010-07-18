@@ -22,19 +22,23 @@
 
 package com.googlecode.batchfb;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import com.googlecode.batchfb.FacebookBatcher.GraphRequest;
+import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
 
 /**
  * <p>
  * Manages the grouping of graph requests.  Groups requests that can be safely batched
  * together in a single Facebook call - that is, requests with the same method and params.
  * This allows us to batch graph calls into a single ids=123,456,789 type call.
+ * </p>
+ * <p>
+ * Note also that connection requests (ie, me/feed) must always group by themselves.
  * </p>
  * 
  * @author Jeff Schnitzer
@@ -44,6 +48,9 @@ class GraphRequestGrouper implements Iterable<LinkedList<GraphRequest<?>>> {
 	/** */
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(GraphRequestGrouper.class.getName());
+	
+	/** Java threading rules allow us to atomically increment this */
+	private static int uniqueValue = 0;
 
 	/**
 	 * Holds a queue of all graph requests to execute.  Note that these are all
@@ -76,22 +83,27 @@ class GraphRequestGrouper implements Iterable<LinkedList<GraphRequest<?>>> {
 	}
 	
 	/**
-	 * Creates a key which defines groupings of graph requests that can be
+	 * <p>Creates a key which defines groupings of graph requests that can be
 	 * batched together.  Graph requests can be grouped when they have the
-	 * same parameters (order-independent) and the same http method.
+	 * same parameters (order-independent).</p>
+	 * 
+	 * <p>Cannot be batched: Methods other than GET, and connection requests
+	 * (eg me/feed). If facebook changes this, just modify this code.</p>
 	 */
 	private Object createStableGroupKey(GraphRequest<?> req) {
-		// A TreeMap (sorted) which includes the names/values of the parameters
-		// and the http method should work.
-		TreeMap<Object, Object> result = new TreeMap<Object, Object>();
 		
-		// The method key is irrelevant as long as it can never collide with an
-		// actual parameter name.  We're safe if we use the enum object itself.
-		result.put(req.method, req.method);
-		
-		for (Param param: req.params)
-			result.put(param.name, param.value.toString());
+		if (req.method != HttpMethod.GET || req.object.contains("/")) {
+			// This trick ensures the request will never group with any others.
+			return uniqueValue++;
+		} else {
+			// A HashMap which includes the names/values of the parameters should work;
+			// the contract for equals() and hashCode() are stable.
+			HashMap<Object, Object> result = new HashMap<Object, Object>();
+			
+			for (Param param: req.params)
+				result.put(param.name, param.value.toString());
 
-		return result;
+			return result;
+		}
 	}
 }

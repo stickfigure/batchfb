@@ -20,38 +20,35 @@
  * THE SOFTWARE.
  */
 
-package com.googlecode.batchfb.util;
+package com.googlecode.batchfb;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+import java.util.List;
+
+import com.googlecode.batchfb.err.FacebookException;
+
 
 /**
- * Some string handling utilities
+ * <p>Adds the ability to enqueue the previous and next pages of Facebook's
+ * paginated data structures.</p>
+ * 
+ * @see FacebookBatcher#paged(String, Class, Param...)
+ * @author Jeff Schnitzer
  */
-public final class StringUtils
-{
+public interface PagedLater<T> extends Later<List<T>> {
+	
 	/**
-	 * Masks the useless checked exception from URLEncoder.encode()
+	 * Executes the current batch (if necessary) and enqueues a request for the previous page of data.
+	 * If there is no previous page of data, this method will return null.
+	 * 
+	 * @throws FacebookException if there was an error executing the original request.
 	 */
-	public static String urlEncode(String string)
-	{
-		try {
-			return URLEncoder.encode(string, "utf-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
+	PagedLater<T> previous() throws FacebookException;
+	
 	/**
-	 * Masks the useless checked exception from URLDecoder.decode()
+	 * Executes the current batch (if necessary) and enqueues a request for the next page of data.
+	 * If there is no next page of data, this method will return null.
+	 * 
+	 * @throws FacebookException if there was an error executing the original request.
 	 */
-	public static String urlDecode(String string)
-	{
-		try {
-			return URLDecoder.decode(string, "utf-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	PagedLater<T> next() throws FacebookException;
 }

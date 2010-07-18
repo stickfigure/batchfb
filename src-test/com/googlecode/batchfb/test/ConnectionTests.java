@@ -22,28 +22,50 @@
 
 package com.googlecode.batchfb.test;
 
-import java.util.Map;
-
 import org.codehaus.jackson.type.TypeReference;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.googlecode.batchfb.Later;
+import com.googlecode.batchfb.PagedLater;
 import com.googlecode.batchfb.type.Paged;
 
 /**
- * Testing out connections (paged stuff)
+ * Testing out connections (paged stuff).  Note that these require an auth token
+ * for an account that has a lot of stuff in the stream.
  * 
  * @author Jeff Schnitzer
  */
 public class ConnectionTests extends TestBase {
 
   /**
+   * Tests using the normal graph() call to get paged data.  Expects to find stuff
+   * on your home.
    */
   @Test
-  public void friends() throws Exception {
-    Later<Paged<Map<String, Object>>> friends = this.authBatcher.graph("me/friends", new TypeReference<Paged<Map<String, Object>>>(){});
+  public void simpleRawPaged() throws Exception {
+    Later<Paged<Object>> feed = this.authBatcher.graph("me/home", new TypeReference<Paged<Object>>(){});
     
-    Assert.assertFalse(friends.get().getData().isEmpty());
+    Assert.assertFalse(feed.get().getData().isEmpty());
+    Assert.assertNotNull(feed.get().getPaging());
   }
+
+  /**
+   * Uses the paged() method.
+   */
+  @Test
+  public void pagedMethod() throws Exception {
+    PagedLater<Object> feed = this.authBatcher.paged("me/friends", Object.class);
+    
+    Assert.assertFalse(feed.get().isEmpty());
+    
+    PagedLater<Object> previous = feed.previous();
+    PagedLater<Object> next = feed.next();
+    
+    Assert.assertTrue(previous.get().isEmpty());
+    Assert.assertFalse(next.get().isEmpty());
+
+    // Just for the hell of it
+    Assert.assertFalse(next.next().get().isEmpty());
+}
 }
