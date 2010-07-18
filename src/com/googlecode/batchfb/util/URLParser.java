@@ -43,7 +43,7 @@ public class URLParser {
 	Map<String, String> params = new LinkedHashMap<String, String>();
 	
 	/**
-	 * @url is assumed to be a valid url with properly encoded key=value pairs, nothing exotic
+	 * @param url is assumed to be a valid url with properly encoded key=value pairs, nothing exotic
 	 */
 	public URLParser(String url) {
 		try {
