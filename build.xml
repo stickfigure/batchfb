@@ -20,6 +20,7 @@
 
 	<property name="build.dir" location="target" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
+	<property name="build.javadoc.dir" location="${build.dir}/javadoc" />
 
 	<property name="build.jar.file" location="${build.dir}/${name}.jar" />
 	
@@ -108,7 +109,7 @@
 
 	<target name="javadoc" depends="init-version, classes">
 		<javadoc
-			destdir="${build.dir}/javadoc"
+			destdir="${build.javadoc.dir}"
 			packagenames="*"
 			classpathref="run.classpath"
 			author="true"
@@ -135,7 +136,7 @@
 		<copy todir="${build.dist.dir}">
 	        <fileset dir=".">
 	        	<include name="license.txt"/>
-			<include name="src/**"/>
+				<include name="src/**"/>
 	        	<include name="javadoc/**"/>
 	        </fileset>
         </copy>
@@ -151,7 +152,7 @@
         <basename property="build.dist.dir.basename" file="${build.dist.dir}" />
 
         <zip zipfile="${build.dist.zip}" basedir="${build.dist.dir.dirname}">
-                <include name="${build.dist.dir.basename}/**" />
+			<include name="${build.dist.dir.basename}/**" />
         </zip>
 
 	</target>
