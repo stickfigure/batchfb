@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
+import com.googlecode.batchfb.err.OAuthAccessTokenException;
 import com.googlecode.batchfb.err.OAuthException;
 import com.googlecode.batchfb.err.QueryParseException;
 
@@ -35,7 +36,7 @@ import com.googlecode.batchfb.err.QueryParseException;
  * 
  * @author Jeff Schnitzer
  */
-public class ExceptionTests {
+public class ExceptionTests extends TestBase {
 
   /**
    * Use an invalid token to generate an OAuthException
@@ -49,13 +50,20 @@ public class ExceptionTests {
   }
   
   /**
-   * Make a token-less call to something that requires a token.
+   * Make a call to /me without a token
    */
   @Test(expected=QueryParseException.class)
   public void makeQueryParseException() throws Exception {
-    FacebookBatcher batcher = new FacebookBatcher();
-    
-    Later<JsonNode> node = batcher.graph("/me");
+    Later<JsonNode> node = this.anonBatcher.graph("/me");
+    node.get();
+  }
+
+  /**
+   * Make a token-less call to something that requires a token.
+   */
+  @Test(expected=OAuthAccessTokenException.class)
+  public void makeOAuthAccessTokenException() throws Exception {
+    Later<JsonNode> node = this.anonBatcher.graph("/markzuckerberg/friends");
     node.get();
   }
 }

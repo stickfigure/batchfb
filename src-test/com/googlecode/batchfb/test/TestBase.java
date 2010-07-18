@@ -22,48 +22,35 @@
 
 package com.googlecode.batchfb.test;
 
-import org.codehaus.jackson.JsonNode;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
 
-import com.googlecode.batchfb.Later;
-import com.googlecode.batchfb.Param;
-import com.googlecode.batchfb.err.FacebookException;
+import com.googlecode.batchfb.FacebookBatcher;
+
 
 /**
- * Basic unit tests for the batching features
+ * Some simple tools common to all tests
  * 
  * @author Jeff Schnitzer
  */
-public class OldApiTests extends TestBase {
+public class TestBase {
 	
-	/**
-	 */
-	@Test
-	public void simpleRequestAsNode() throws Exception {
-		Later<JsonNode> node = this.anonBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
-		Assert.assertTrue(node.get().isArray());
-		Assert.assertEquals(1, node.get().size());
-		Assert.assertEquals(1047296661, node.get().get(0).get("uid").getIntValue());
+	/** This should be set on the command line with a -DaccessToken=BLAH argument */
+	protected static final String ACCESS_TOKEN = System.getProperty("accessToken");
+	
+	/** */
+	protected FacebookBatcher authBatcher;
+	protected FacebookBatcher anonBatcher;
+	
+	@Before
+	public void setUp() throws Exception {
+		this.authBatcher = new FacebookBatcher(ACCESS_TOKEN);
+		this.anonBatcher = new FacebookBatcher();
 	}
-	
-	/**
-	 */
-	@Test
-	public void twoRequestsBatched() throws Exception {
-		Later<JsonNode> bob = this.anonBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
-		
-		// This method requires an API key so it will fail
-		Later<JsonNode> bob2 = this.anonBatcher.oldRest("friends.get", new Param("uid", 1047296661));
 
-		// This should successfully return
-		bob.get();
-		
-		// This should throw an exception
-		try {
-			bob2.get();
-		} catch (FacebookException ex) {
-			// Do nothing
-		}
+	@After
+	public void tearDown() throws Exception {
+		this.authBatcher = null;
+		this.anonBatcher = null;
 	}
 }

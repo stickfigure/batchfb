@@ -26,7 +26,6 @@ import org.codehaus.jackson.node.ArrayNode;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
 
 /**
@@ -34,16 +33,14 @@ import com.googlecode.batchfb.Later;
  * 
  * @author Jeff Schnitzer
  */
-public class MultiqueryTests {
+public class MultiqueryTests extends TestBase {
 
   /**
    */
   @Test
   public void basicMultiquery() throws Exception {
-    FacebookBatcher batcher = new FacebookBatcher();
-    
-    Later<ArrayNode> firstNameArray = batcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
-    Later<ArrayNode> lastNameArray = batcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
+    Later<ArrayNode> firstNameArray = this.anonBatcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
+    Later<ArrayNode> lastNameArray = this.anonBatcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
     
     Assert.assertEquals(1, firstNameArray.get().size());
     Assert.assertEquals(1, lastNameArray.get().size());

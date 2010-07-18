@@ -676,7 +676,8 @@ public class FacebookBatcher {
 				// Weird, javac (from ant) needs this cast but Eclipse doesn't. 
 				response.result = (T)this.mapper.readValue(conn.getInputStream(), resultType);
 			}
-			else if (conn.getResponseCode() == HttpURLConnection.HTTP_BAD_REQUEST)
+			else if (conn.getResponseCode() == HttpURLConnection.HTTP_BAD_REQUEST
+					|| conn.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED)
 			{
 				JsonNode node = this.mapper.readTree(conn.getErrorStream());
 				response.error = this.createGraphException(node);

@@ -29,7 +29,6 @@ import org.codehaus.jackson.node.ArrayNode;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
 
 /**
@@ -37,7 +36,7 @@ import com.googlecode.batchfb.Later;
  * 
  * @author Jeff Schnitzer
  */
-public class BasicBatchTests {
+public class BasicBatchTests extends TestBase {
 	
 	/** */
 	static class User {
@@ -48,9 +47,7 @@ public class BasicBatchTests {
 	 */
 	@Test
 	public void singleFqlAsNode() throws Exception {
-		FacebookBatcher batcher = new FacebookBatcher();
-		
-		Later<ArrayNode> array = batcher.query("SELECT name FROM user WHERE uid = 1047296661");
+		Later<ArrayNode> array = this.anonBatcher.query("SELECT name FROM user WHERE uid = 1047296661");
 		Assert.assertEquals(1, array.get().size());
 		Assert.assertEquals("Robert Dobbs", array.get().get(0).get("name").getTextValue());
 	}
@@ -59,9 +56,7 @@ public class BasicBatchTests {
 	 */
 	@Test
 	public void singleFqlAsNodeUsingQueryFirst() throws Exception {
-		FacebookBatcher batcher = new FacebookBatcher();
-		
-		Later<JsonNode> node = batcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661");
+		Later<JsonNode> node = this.anonBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661");
 		Assert.assertEquals("Robert Dobbs", node.get().get("name").getTextValue());
 	}
 	
@@ -69,9 +64,7 @@ public class BasicBatchTests {
 	 */
 	@Test
 	public void singleFqlAsObject() throws Exception {
-		FacebookBatcher batcher = new FacebookBatcher();
-		
-		Later<List<User>> array = batcher.query("SELECT name FROM user WHERE uid = 1047296661", User.class);
+		Later<List<User>> array = this.anonBatcher.query("SELECT name FROM user WHERE uid = 1047296661", User.class);
 		Assert.assertEquals(1, array.get().size());
 		Assert.assertEquals("Robert Dobbs", array.get().get(0).name);
 	}
@@ -80,9 +73,7 @@ public class BasicBatchTests {
 	 */
 	@Test
 	public void singleFqlAsObjectUsingQueryFirst() throws Exception {
-		FacebookBatcher batcher = new FacebookBatcher();
-		
-		Later<User> array = batcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661", User.class);
+		Later<User> array = this.anonBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661", User.class);
 		Assert.assertEquals("Robert Dobbs", array.get().name);
 	}
 	
@@ -90,9 +81,7 @@ public class BasicBatchTests {
 	 */
 	@Test
 	public void singleRequestAsNode() throws Exception {
-		FacebookBatcher batcher = new FacebookBatcher();
-		
-		Later<JsonNode> node = batcher.graph("/1047296661");
+		Later<JsonNode> node = this.anonBatcher.graph("/1047296661");
 		Assert.assertEquals("Robert Dobbs", node.get().get("name").getTextValue());
 	}
 	
@@ -100,9 +89,7 @@ public class BasicBatchTests {
 	 */
 	@Test
 	public void singleRequestAsObject() throws Exception {
-		FacebookBatcher batcher = new FacebookBatcher();
-		
-		Later<User> user = batcher.graph("/1047296661", User.class);
+		Later<User> user = this.anonBatcher.graph("/1047296661", User.class);
 		Assert.assertEquals("Robert Dobbs", user.get().name);
 	}
 }

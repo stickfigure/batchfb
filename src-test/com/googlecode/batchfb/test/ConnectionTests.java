@@ -22,48 +22,28 @@
 
 package com.googlecode.batchfb.test;
 
-import org.codehaus.jackson.JsonNode;
+import java.util.Map;
+
+import org.codehaus.jackson.type.TypeReference;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.googlecode.batchfb.Later;
-import com.googlecode.batchfb.Param;
-import com.googlecode.batchfb.err.FacebookException;
+import com.googlecode.batchfb.type.Paged;
 
 /**
- * Basic unit tests for the batching features
+ * Testing out connections (paged stuff)
  * 
  * @author Jeff Schnitzer
  */
-public class OldApiTests extends TestBase {
-	
-	/**
-	 */
-	@Test
-	public void simpleRequestAsNode() throws Exception {
-		Later<JsonNode> node = this.anonBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
-		Assert.assertTrue(node.get().isArray());
-		Assert.assertEquals(1, node.get().size());
-		Assert.assertEquals(1047296661, node.get().get(0).get("uid").getIntValue());
-	}
-	
-	/**
-	 */
-	@Test
-	public void twoRequestsBatched() throws Exception {
-		Later<JsonNode> bob = this.anonBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
-		
-		// This method requires an API key so it will fail
-		Later<JsonNode> bob2 = this.anonBatcher.oldRest("friends.get", new Param("uid", 1047296661));
+public class ConnectionTests extends TestBase {
 
-		// This should successfully return
-		bob.get();
-		
-		// This should throw an exception
-		try {
-			bob2.get();
-		} catch (FacebookException ex) {
-			// Do nothing
-		}
-	}
+  /**
+   */
+  @Test
+  public void friends() throws Exception {
+    Later<Paged<Map<String, Object>>> friends = this.authBatcher.graph("me/friends", new TypeReference<Paged<Map<String, Object>>>(){});
+    
+    Assert.assertFalse(friends.get().getData().isEmpty());
+  }
 }
