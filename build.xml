@@ -22,8 +22,6 @@
 	<property name="build.classes.dir" location="${build.dir}/classes" />
 	<property name="build.javadoc.dir" location="${build.dir}/javadoc" />
 
-	<property name="build.jar.file" location="${build.dir}/${name}.jar" />
-	
 	<property name="docs.dir" value="${build.dir}/docs" />
 	<property name="javadoc.dir" value="javadoc" />
 	
