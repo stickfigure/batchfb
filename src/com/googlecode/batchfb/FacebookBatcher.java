@@ -597,7 +597,7 @@ public class FacebookBatcher {
 	 * Executes a properly grouped set of graph requests as a single facebook call.
 	 * @param group must all have the same http method and params 
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void executeGraphGroup(LinkedList<GraphRequest<?>> group) {
 		if (group.size() == 1) {
 			// This is easy enough we should just special-case it and remove the
