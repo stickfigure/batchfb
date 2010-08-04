@@ -39,8 +39,8 @@ import java.util.logging.Logger;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.DeserializationConfig.Feature;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.VisibilityChecker.Std;
 import org.codehaus.jackson.map.type.TypeFactory;
 import org.codehaus.jackson.node.ArrayNode;
@@ -57,9 +57,9 @@ import com.googlecode.batchfb.util.FirstElementLater;
 import com.googlecode.batchfb.util.FirstNodeLater;
 import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.RequestBuilder;
+import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
 import com.googlecode.batchfb.util.StringUtils;
 import com.googlecode.batchfb.util.URLParser;
-import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
 
 /**
  * <p>
@@ -732,7 +732,7 @@ public class FacebookBatcher {
 					try {
 						JsonNode root = this.mapper.readTree(responseString);
 						req.response.error = this.checkForOldApiError(root);
-						if (req.response.error != null)
+						if (req.response.error == null)
 							req.response.result = this.mapper.convertValue(root, req.resultType);
 						
 					} catch (IOException e) {
