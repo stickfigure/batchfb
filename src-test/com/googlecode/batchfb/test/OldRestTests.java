@@ -63,7 +63,7 @@ public class OldRestTests extends TestBase {
 		Later<JsonNode> bob2 = this.authBatcher.oldRest("friends.get", new Param("uid", 1047296661));
 
 		// This should successfully return
-		assert bob.get().get("uid").getValueAsText().equals("1047296661");
+		assert bob.get().get(0).get("uid").getValueAsText().equals("1047296661");
 		assert bob2.get().isArray();
 		assert bob2.get().size() > 0;
 	}

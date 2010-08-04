@@ -631,7 +631,8 @@ public class FacebookBatcher {
 			} else {
 				for (GraphRequest<?> req: group) {
 					((GraphRequest)req).response = new Response<Object>();
-					((GraphRequest)req).response.result = this.mapper.convertValue(response.result, req.resultType);
+					JsonNode child = response.result.get(req.object);
+					((GraphRequest)req).response.result = this.mapper.convertValue(child, req.resultType);
 				}
 			}
 		}
