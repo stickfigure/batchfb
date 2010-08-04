@@ -60,11 +60,11 @@ public class OldRestTests extends TestBase {
 		Later<JsonNode> bob = this.authBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
 		
 		// This method requires an API key so it will fail
-		Later<JsonNode> bob2 = this.authBatcher.oldRest("friends.get", new Param("uid", 1047296661));
+		Later<JsonNode> jeff = this.authBatcher.oldRest("friends.get", new Param("uid", 503702723));
 
 		// This should successfully return
 		assert bob.get().get(0).get("uid").getValueAsText().equals("1047296661");
-		assert bob2.get().isArray();
-		assert bob2.get().size() > 0;
+		assert jeff.get().isArray();
+		assert jeff.get().size() > 0;
 	}
 }
