@@ -23,8 +23,7 @@
 package com.googlecode.batchfb.test;
 
 import org.codehaus.jackson.node.ArrayNode;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.Later;
 
@@ -42,9 +41,9 @@ public class MultiqueryTests extends TestBase {
     Later<ArrayNode> firstNameArray = this.anonBatcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
     Later<ArrayNode> lastNameArray = this.anonBatcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
     
-    Assert.assertEquals(1, firstNameArray.get().size());
-    Assert.assertEquals(1, lastNameArray.get().size());
-    Assert.assertEquals("Robert", firstNameArray.get().get(0).get("first_name").getTextValue());
-    Assert.assertEquals("Dobbs", lastNameArray.get().get(0).get("last_name").getTextValue());
+    assert 1 == firstNameArray.get().size();
+    assert 1 == lastNameArray.get().size();
+    assert "Robert".equals(firstNameArray.get().get(0).get("first_name").getTextValue());
+    assert "Dobbs".equals(lastNameArray.get().get(0).get("last_name").getTextValue());
   }
 }

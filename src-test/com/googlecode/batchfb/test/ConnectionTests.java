@@ -23,8 +23,7 @@
 package com.googlecode.batchfb.test;
 
 import org.codehaus.jackson.type.TypeReference;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.PagedLater;
@@ -46,8 +45,8 @@ public class ConnectionTests extends TestBase {
   public void simpleRawPaged() throws Exception {
     Later<Paged<Object>> feed = this.authBatcher.graph("me/home", new TypeReference<Paged<Object>>(){});
     
-    Assert.assertFalse(feed.get().getData().isEmpty());
-    Assert.assertNotNull(feed.get().getPaging());
+    assert !feed.get().getData().isEmpty();
+    assert feed.get().getPaging() != null;
   }
 
   /**
@@ -57,15 +56,15 @@ public class ConnectionTests extends TestBase {
   public void pagedMethod() throws Exception {
     PagedLater<Object> feed = this.authBatcher.paged("me/home", Object.class);
     
-    Assert.assertFalse(feed.get().isEmpty());
+    assert !feed.get().isEmpty();
     
     PagedLater<Object> previous = feed.previous();
     PagedLater<Object> next = feed.next();
     
-    Assert.assertTrue(previous.get().isEmpty());
-    Assert.assertFalse(next.get().isEmpty());
+    assert previous.get().isEmpty();
+    assert !next.get().isEmpty();
 
     // Just for the hell of it
-    Assert.assertFalse(next.next().get().isEmpty());
+    assert !next.next().get().isEmpty();
 }
 }

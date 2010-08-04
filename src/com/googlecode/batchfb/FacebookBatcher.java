@@ -466,27 +466,30 @@ public class FacebookBatcher {
 	}
 	
 	/**
-	 * Enqueue a call to the old REST API.
+	 * Enqueue a call to the old REST API.  Requires an access token.
 	 * 
 	 * @param methodName is the name of the method, eg "status.get"
+	 * @throws IllegalStateException if this batcher was not created with an access token
 	 */
 	public <T> Later<T> oldRest(String methodName, Class<T> type, Param... params) {
 		return this.oldRest(methodName, TypeFactory.type(type), params);
 	}
 	
 	/**
-	 * Enqueue a call to the old REST API.
+	 * Enqueue a call to the old REST API.  Requires an access token.
 	 * 
 	 * @param methodName is the name of the method, eg "status.get"
+	 * @throws IllegalStateException if this batcher was not created with an access token
 	 */
 	public <T> Later<T> oldRest(String methodName, TypeReference<T> type, Param... params) {
 		return this.oldRest(methodName, TypeFactory.type(type), params);
 	}
 	
 	/**
-	 * Enqueue a call to the old REST API.
+	 * Enqueue a call to the old REST API.  Requires an access token.
 	 * 
 	 * @param methodName is the name of the method, eg "status.get"
+	 * @throws IllegalStateException if this batcher was not created with an access token
 	 */
 	public Later<JsonNode> oldRest(String methodName, Param... params) {
 		return this.oldRest(methodName, JSON_NODE_TYPE, params);
@@ -494,8 +497,12 @@ public class FacebookBatcher {
 	
 	/**
 	 * Implementation after we have discovered Jackson JavaType.
+	 * @throws IllegalStateException if this batcher was not created with an access token
 	 */
 	private <T> Later<T> oldRest(String methodName, JavaType type, Param... params) {
+		if (this.accessToken == null)
+			throw new IllegalStateException("All calls to Old REST API require an access token");
+			
 		OldRequest<T> req = new OldRequest<T>(methodName, type, params);
 		this.oldRequests.add(req);
 		return req;

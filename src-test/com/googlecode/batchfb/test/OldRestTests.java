@@ -23,47 +23,48 @@
 package com.googlecode.batchfb.test;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.Param;
-import com.googlecode.batchfb.err.FacebookException;
 
 /**
  * Basic unit tests for the batching features
  * 
  * @author Jeff Schnitzer
  */
-public class OldApiTests extends TestBase {
+public class OldRestTests extends TestBase {
 	
 	/**
 	 */
 	@Test
 	public void simpleRequestAsNode() throws Exception {
-		Later<JsonNode> node = this.anonBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
-		Assert.assertTrue(node.get().isArray());
-		Assert.assertEquals(1, node.get().size());
-		Assert.assertEquals(1047296661, node.get().get(0).get("uid").getIntValue());
+		Later<JsonNode> node = this.authBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
+		assert node.get().isArray();
+		assert 1 == node.get().size();
+		assert 1047296661 == node.get().get(0).get("uid").getIntValue();
 	}
 	
 	/**
 	 */
+	@Test(expectedExceptions=IllegalStateException.class)
+	public void tryWithoutAccessToken() throws Exception {
+		this.anonBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
+	}
+	
+	/**
+	 * Ensure that it works.
+	 */
 	@Test
 	public void twoRequestsBatched() throws Exception {
-		Later<JsonNode> bob = this.anonBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
+		Later<JsonNode> bob = this.authBatcher.oldRest("fql.query", new Param("query", "SELECT uid FROM user WHERE uid = 1047296661"));
 		
 		// This method requires an API key so it will fail
-		Later<JsonNode> bob2 = this.anonBatcher.oldRest("friends.get", new Param("uid", 1047296661));
+		Later<JsonNode> bob2 = this.authBatcher.oldRest("friends.get", new Param("uid", 1047296661));
 
 		// This should successfully return
-		bob.get();
-		
-		// This should throw an exception
-		try {
-			bob2.get();
-		} catch (FacebookException ex) {
-			// Do nothing
-		}
+		assert bob.get().get("uid").getValueAsText().equals("1047296661");
+		assert bob2.get().isArray();
+		assert bob2.get().size() > 0;
 	}
 }

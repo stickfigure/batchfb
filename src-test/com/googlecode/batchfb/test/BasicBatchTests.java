@@ -26,8 +26,7 @@ import java.util.List;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.Later;
 
@@ -48,8 +47,8 @@ public class BasicBatchTests extends TestBase {
 	@Test
 	public void singleFqlAsNode() throws Exception {
 		Later<ArrayNode> array = this.anonBatcher.query("SELECT name FROM user WHERE uid = 1047296661");
-		Assert.assertEquals(1, array.get().size());
-		Assert.assertEquals("Robert Dobbs", array.get().get(0).get("name").getTextValue());
+		assert 1 == array.get().size();
+		assert "Robert Dobbs".equals(array.get().get(0).get("name").getTextValue());
 	}
 	
 	/**
@@ -57,7 +56,7 @@ public class BasicBatchTests extends TestBase {
 	@Test
 	public void singleFqlAsNodeUsingQueryFirst() throws Exception {
 		Later<JsonNode> node = this.anonBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661");
-		Assert.assertEquals("Robert Dobbs", node.get().get("name").getTextValue());
+		assert "Robert Dobbs".equals(node.get().get("name").getTextValue());
 	}
 	
 	/**
@@ -65,8 +64,8 @@ public class BasicBatchTests extends TestBase {
 	@Test
 	public void singleFqlAsObject() throws Exception {
 		Later<List<User>> array = this.anonBatcher.query("SELECT name FROM user WHERE uid = 1047296661", User.class);
-		Assert.assertEquals(1, array.get().size());
-		Assert.assertEquals("Robert Dobbs", array.get().get(0).name);
+		assert 1 == array.get().size();
+		assert "Robert Dobbs".equals(array.get().get(0).name);
 	}
 	
 	/**
@@ -74,7 +73,7 @@ public class BasicBatchTests extends TestBase {
 	@Test
 	public void singleFqlAsObjectUsingQueryFirst() throws Exception {
 		Later<User> array = this.anonBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661", User.class);
-		Assert.assertEquals("Robert Dobbs", array.get().name);
+		assert "Robert Dobbs".equals(array.get().name);
 	}
 	
 	/**
@@ -82,7 +81,7 @@ public class BasicBatchTests extends TestBase {
 	@Test
 	public void singleRequestAsNode() throws Exception {
 		Later<JsonNode> node = this.anonBatcher.graph("/1047296661");
-		Assert.assertEquals("Robert Dobbs", node.get().get("name").getTextValue());
+		assert "Robert Dobbs".equals(node.get().get("name").getTextValue());
 	}
 	
 	/**
@@ -90,6 +89,6 @@ public class BasicBatchTests extends TestBase {
 	@Test
 	public void singleRequestAsObject() throws Exception {
 		Later<User> user = this.anonBatcher.graph("/1047296661", User.class);
-		Assert.assertEquals("Robert Dobbs", user.get().name);
+		assert "Robert Dobbs".equals(user.get().name);
 	}
 }

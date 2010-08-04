@@ -23,7 +23,7 @@
 package com.googlecode.batchfb.test;
 
 import org.codehaus.jackson.JsonNode;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
@@ -41,7 +41,7 @@ public class ExceptionTests extends TestBase {
   /**
    * Use an invalid token to generate an OAuthException
    */
-  @Test(expected=OAuthException.class)
+  @Test(expectedExceptions=OAuthException.class)
   public void makeOAuthException() throws Exception {
     FacebookBatcher batcher = new FacebookBatcher("asdf");
     
@@ -52,7 +52,7 @@ public class ExceptionTests extends TestBase {
   /**
    * Make a call to /me without a token
    */
-  @Test(expected=QueryParseException.class)
+  @Test(expectedExceptions=QueryParseException.class)
   public void makeQueryParseException() throws Exception {
     Later<JsonNode> node = this.anonBatcher.graph("/me");
     node.get();
@@ -61,7 +61,7 @@ public class ExceptionTests extends TestBase {
   /**
    * Make a token-less call to something that requires a token.
    */
-  @Test(expected=OAuthAccessTokenException.class)
+  @Test(expectedExceptions=OAuthAccessTokenException.class)
   public void makeOAuthAccessTokenException() throws Exception {
     Later<JsonNode> node = this.anonBatcher.graph("/markzuckerberg/friends");
     node.get();
