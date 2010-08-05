@@ -22,49 +22,65 @@
 
 package com.googlecode.batchfb.test;
 
+import java.util.Date;
+
 import org.codehaus.jackson.type.TypeReference;
 import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.PagedLater;
+import com.googlecode.batchfb.Param;
 import com.googlecode.batchfb.type.Paged;
 
 /**
- * Testing out connections (paged stuff).  Note that these require an auth token
+ * Testing out connections (paged stuff). Note that these require an auth token
  * for an account that has a lot of stuff in the stream.
  * 
  * @author Jeff Schnitzer
  */
-public class ConnectionTests extends TestBase {
+public class ConnectionTests extends TestBase
+{
+	/**
+	 * Tests using the normal graph() call to get paged data. Expects to find
+	 * stuff on your home.
+	 */
+	@Test
+	public void simpleRawPaged() throws Exception {
+		Later<Paged<Object>> feed = this.authBatcher.graph("me/home", new TypeReference<Paged<Object>>(){});
 
-  /**
-   * Tests using the normal graph() call to get paged data.  Expects to find stuff
-   * on your home.
-   */
-  @Test
-  public void simpleRawPaged() throws Exception {
-    Later<Paged<Object>> feed = this.authBatcher.graph("me/home", new TypeReference<Paged<Object>>(){});
-    
-    assert !feed.get().getData().isEmpty();
-    assert feed.get().getPaging() != null;
-  }
+		assert !feed.get().getData().isEmpty();
+		assert feed.get().getPaging() != null;
+	}
 
-  /**
-   * Uses the paged() method.
-   */
-  @Test
-  public void pagedMethod() throws Exception {
-    PagedLater<Object> feed = this.authBatcher.paged("me/home", Object.class);
-    
-    assert !feed.get().isEmpty();
-    
-    PagedLater<Object> previous = feed.previous();
-    PagedLater<Object> next = feed.next();
-    
-    assert previous.get().isEmpty();
-    assert !next.get().isEmpty();
+	/**
+	 * Uses the paged() method.
+	 */
+	@Test
+	public void pagedMethod() throws Exception {
+		PagedLater<Object> feed = this.authBatcher.paged("me/home", Object.class);
 
-    // Just for the hell of it
-    assert !next.next().get().isEmpty();
-}
+		assert !feed.get().isEmpty();
+
+		PagedLater<Object> previous = feed.previous();
+		PagedLater<Object> next = feed.next();
+
+		assert previous.get().isEmpty();
+		assert !next.get().isEmpty();
+
+		// Just for the hell of it
+		assert !next.next().get().isEmpty();
+	}
+	
+	/**
+	 * Tests the "since" parameter
+	 */
+	@Test
+	public void sinceParam() throws Exception {
+		Date yesterday = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
+		
+		PagedLater<Object> feed = this.authBatcher.paged("me/feed", Object.class);
+		PagedLater<Object> abridged = this.authBatcher.paged("me/feed", Object.class, new Param("since", yesterday));
+		
+		assert feed.get().size() > abridged.get().size();
+	}
 }
