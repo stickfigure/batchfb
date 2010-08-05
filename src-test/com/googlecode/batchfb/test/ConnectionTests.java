@@ -72,15 +72,36 @@ public class ConnectionTests extends TestBase
 	}
 	
 	/**
-	 * Tests the "since" parameter
+	 * Tests the "since" parameter.  Note that this test is fairly sensitive to how
+	 * much you get posted to your stream... hopefully less than the item count in
+	 * an hour otherwise you'll get a false negative.
 	 */
 	@Test
 	public void sinceParam() throws Exception {
-		Date yesterday = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24));
+		Date oneHourAgo = new Date(System.currentTimeMillis() - (1000 * 60 * 60));
 		
-		PagedLater<Object> feed = this.authBatcher.paged("me/feed", Object.class);
-		PagedLater<Object> abridged = this.authBatcher.paged("me/feed", Object.class, new Param("since", yesterday));
+		PagedLater<Object> feed = this.authBatcher.paged("me/home", Object.class);
+		PagedLater<Object> abridged = this.authBatcher.paged("me/home", Object.class, new Param("since", oneHourAgo));
 		
 		assert feed.get().size() > abridged.get().size();
+	}
+
+	/**
+	 * Deeper tests the "since" parameter
+	 */
+	@Test
+	public void sinceParamWithPaging() throws Exception {
+		Date twoHoursAgo = new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 2));
+		
+		PagedLater<Object> feed = this.authBatcher.paged("me/home", Object.class);
+		PagedLater<Object> abridged = this.authBatcher.paged("me/home", Object.class, new Param("since", twoHoursAgo));
+		
+		assert feed.get().size() > abridged.get().size();
+
+		// Not really a valid test.  Facebook acts weird.
+//		PagedLater<Object> nextFeed = feed.next();
+//		PagedLater<Object> nextAbridged = abridged.next();
+//
+//		assert nextFeed.get().size() > nextAbridged.get().size();
 	}
 }
