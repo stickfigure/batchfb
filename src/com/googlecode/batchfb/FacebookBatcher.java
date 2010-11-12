@@ -827,7 +827,7 @@ public class FacebookBatcher {
 	 * whatever that happens to be. It tries to match the type of the exception with an actual
 	 * exception class of the correct name.
 	 * 
-	 * If the node doesn't have a normal "error" field, an IOFacebookException is retrned.  Something
+	 * If the node doesn't have a normal "error" field, an IOFacebookException is returned.  Something
 	 * unexpected is wrong.
 	 */
 	private FacebookException createGraphException(JsonNode node) {
@@ -843,7 +843,7 @@ public class FacebookBatcher {
 				return new PermissionException(msg);
 			
 			// We check to see if we have an exception that matches the type, otherwise
-			// we simply throw the base FormalFacebookException
+			// we simply throw the base FacebookException
 			String proposedExceptionType = this.getClass().getPackage().getName() + ".err." + type;
 			
 			try {
