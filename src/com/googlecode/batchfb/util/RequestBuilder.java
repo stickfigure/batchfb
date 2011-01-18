@@ -65,13 +65,22 @@ public class RequestBuilder {
 	Map<String, Object> params = new LinkedHashMap<String, Object>(); // value will be either String or BinaryAttachment
 	HttpMethod method;
 	boolean hasBinaryAttachments;
+	int timeout;	// 0 for no timeout
 	
 	/**
 	 * Construct from a base URL like http://api.facebook.com/. It should not have any query parameters or a ?.
 	 */
 	public RequestBuilder(String url, HttpMethod method) {
+		this(url, method, 0);
+	}
+	
+	/**
+	 * Construct from a base URL like http://api.facebook.com/. It should not have any query parameters or a ?.
+	 */
+	public RequestBuilder(String url, HttpMethod method, int timeout) {
 		this.baseURL = url;
 		this.method = method;
+		this.timeout = timeout;
 	}
 	
 	/**
@@ -90,6 +99,13 @@ public class RequestBuilder {
 		
 		this.params.put(name, new BinaryAttachment(stream, contentType, filename));
 		this.hasBinaryAttachments = true;
+	}
+	
+	/**
+	 * Set a connection/read timeout, or 0 for no timeout.
+	 */
+	public void setTimeout(int millis) {
+		this.timeout = millis;
 	}
 	
 	/**
@@ -137,6 +153,12 @@ public class RequestBuilder {
 	protected HttpURLConnection createConnection(String url) throws IOException {
 		HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
 		conn.setRequestMethod(this.method.name());
+		
+		if (this.timeout > 0) {
+			conn.setConnectTimeout(this.timeout);
+			conn.setReadTimeout(this.timeout);
+		}
+		
 		return conn;
 	}
 	

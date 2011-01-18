@@ -259,6 +259,11 @@ public class FacebookBatcher {
 	private int generatedQueryNameIndex;
 	
 	/**
+	 * Connection and read timeout for http connections, 0 for no timeout
+	 */
+	private int timeout = 0;	
+	
+	/**
 	 * Construct a batcher without an access token. All requests will be unauthenticated.
 	 */
 	public FacebookBatcher() {
@@ -286,6 +291,20 @@ public class FacebookBatcher {
 	 */
 	public ObjectMapper getMapper() {
 		return this.mapper;
+	}
+	
+	/**
+	 * Sets the connection timeout in milliseconds.  0 means no timeout.
+	 */
+	public void setTimeout(int millis) {
+		this.timeout = millis;
+	}
+	
+	/**
+	 * Gets the connection/read timeout in milliseconds, or 0 for "no timeout".
+	 */
+	public int getTimeout() {
+		return this.timeout;
 	}
 	
 	/**
@@ -614,7 +633,7 @@ public class FacebookBatcher {
 			// The http method and params will be the same for all, so use the first
 			GraphRequest<?> first = group.getFirst();
 			
-			RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT, first.method);
+			RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT, first.method, this.timeout);
 			
 			// We add the generated ids first because of the case where the user chose
 			// to specify all the ids as a Param explicitly.  If that happens, the
@@ -660,7 +679,7 @@ public class FacebookBatcher {
 	 * Executes a single graph request as a standalone request and stores the result in itself.
 	 */
 	private void executeSingle(GraphRequest<?> req) {
-		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + req.object, req.method);
+		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + req.object, req.method, this.timeout);
 		this.addParams(call, req.params);
 		req.response = this.fetchGraph(call, req.resultType);
 	}
@@ -670,7 +689,7 @@ public class FacebookBatcher {
 	 */
 	private void execute(OldRequest<?> req) {
 		
-		RequestBuilder call = new RequestBuilder(OLD_REST_ENDPOINT + req.methodName, HttpMethod.GET);
+		RequestBuilder call = new RequestBuilder(OLD_REST_ENDPOINT + req.methodName, HttpMethod.GET, this.timeout);
 		
 		this.addParams(call, req.params);
 		
