@@ -479,9 +479,15 @@ public class FacebookBatcher {
 	 * @param params can include a BinaryParam to post binary objects.
 	 */
 	public Later<String> post(String object, Param... params) {
-		GraphRequest<String> req = new GraphRequest<String>(object, HttpMethod.POST, TypeFactory.type(String.class), params);
+		final GraphRequest<JsonNode> req = new GraphRequest<JsonNode>(object, HttpMethod.POST, JSON_NODE_TYPE, params);
 		this.graphRequests.add(req);
-		return req;
+		return new Later<String>() {
+			@Override
+			public String get() throws FacebookException
+			{
+				return req.get().path("id").getValueAsText();
+			}
+		};
 	}
 	
 	/**
