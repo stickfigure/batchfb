@@ -631,34 +631,37 @@ public class FacebookBatcher {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void executeGraphGroup(LinkedList<GraphRequest<?>> group) {
-		if (group.size() == 1) {
-			// This is easy enough we should just special-case it and remove the
-			// overhead of generating the intermediate JsonNode graph.
-			this.executeSingle(group.getFirst());
+		// Unfortunately, the Facebook graph API is horrifically broken when it comes
+		// to error handling.  For single requests (ie graph.facebook.com/123), some
+		// values will produce a simple text "false"; when doing multi-requests (using ids=)
+		// these are simply left out of the result set.  Empty multi-requests produce
+		// a [] json array rather than the expected {}.
+		// 
+		// Solution:  All requests are forced into the ids= form, and the intermediate
+		// JsonNode structure gives us some insulation from Facebook's burning stupid.
+		
+		// The http method and params will be the same for all, so use the first
+		GraphRequest<?> first = group.getFirst();
+		
+		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT, first.method, this.timeout);
+		
+		// We add the generated ids first because of the case where the user chose
+		// to specify all the ids as a Param explicitly.  If that happens, the
+		// generated ids field will be bogus, but it will be overwritten when the
+		// explicit params are added.  It is a little odd and it seems like allowing
+		// users to specify ids as a param is a bad idea, but it all works out so WTH.
+		call.addParam("ids", this.createIdsString(group));
+		this.addParams(call, first.params);
+		
+		Response<JsonNode> response = this.fetchGraph(call, JSON_NODE_TYPE);
+		if (response.error != null) {
+			for (GraphRequest<?> req: group)
+				((GraphRequest)req).response = response;
 		} else {
-			// The http method and params will be the same for all, so use the first
-			GraphRequest<?> first = group.getFirst();
-			
-			RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT, first.method, this.timeout);
-			
-			// We add the generated ids first because of the case where the user chose
-			// to specify all the ids as a Param explicitly.  If that happens, the
-			// generated ids field will be bogus, but it will be overwritten when the
-			// explicit params are added.  It is a little odd and it seems like allowing
-			// users to specify ids as a param is a bad idea, but it all works out so WTH.
-			call.addParam("ids", this.createIdsString(group));
-			this.addParams(call, first.params);
-			
-			Response<JsonNode> response = this.fetchGraph(call, JSON_NODE_TYPE);
-			if (response.error != null) {
-				for (GraphRequest<?> req: group)
-					((GraphRequest)req).response = response;
-			} else {
-				for (GraphRequest<?> req: group) {
-					((GraphRequest)req).response = new Response<Object>();
-					JsonNode child = response.result.get(req.object);
-					((GraphRequest)req).response.result = this.mapper.convertValue(child, req.resultType);
-				}
+			for (GraphRequest<?> req: group) {
+				((GraphRequest)req).response = new Response<Object>();
+				JsonNode child = response.result.get(req.object);
+				((GraphRequest)req).response.result = this.mapper.convertValue(child, req.resultType);
 			}
 		}
 	}
@@ -679,15 +682,6 @@ public class FacebookBatcher {
 		}
 		
 		return bld.toString();
-	}
-	
-	/**
-	 * Executes a single graph request as a standalone request and stores the result in itself.
-	 */
-	private void executeSingle(GraphRequest<?> req) {
-		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + req.object, req.method, this.timeout);
-		this.addParams(call, req.params);
-		req.response = this.fetchGraph(call, req.resultType);
 	}
 	
 	/**
