@@ -813,8 +813,8 @@ public class FacebookBatcher {
 		Response<T> response = new Response<T>();
 		
 		try {
-			if (log.isLoggable(Level.FINEST))
-				log.finest("Fetching: " + call);
+			if (log.isLoggable(Level.FINER))
+				log.finer("Fetching: " + call);
 			
 			HttpURLConnection conn = (HttpURLConnection)call.execute();
 			
@@ -889,8 +889,8 @@ public class FacebookBatcher {
 		Response<T> response = new Response<T>();
 		
 		try {
-			if (log.isLoggable(Level.FINEST))
-				log.finest("Fetching: " + call);
+			if (log.isLoggable(Level.FINER))
+				log.finer("Fetching: " + call);
 			
 			HttpURLConnection conn = (HttpURLConnection)call.execute();
 			
