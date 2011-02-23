@@ -639,6 +639,16 @@ public class FacebookBatcher {
 		// 
 		// Solution:  All requests are forced into the ids= form, and the intermediate
 		// JsonNode structure gives us some insulation from Facebook's burning stupid.
+		// However, connection requests (eg me/likes) do not work this way, so they must
+		// be sent on to executeSingleGraph()
+		
+		// The short-circuit for connections
+		if (group.size() == 1 && group.getFirst().object.contains("/")) {
+			// This is easy enough we should just special-case it and remove the
+			// overhead of generating the intermediate JsonNode graph.
+			this.executeSingle(group.getFirst());
+			return;
+		}
 		
 		// The http method and params will be the same for all, so use the first
 		GraphRequest<?> first = group.getFirst();
@@ -684,6 +694,18 @@ public class FacebookBatcher {
 		return bld.toString();
 	}
 	
+	/**
+	 * Executes a single graph request as a standalone request and stores the result in itself.
+	 * Note that this should not be used for "simple" queries which might return "false" rather
+	 * than the expected JSON result (thanks a fucking lot, Facebook).  It should be just
+	 * used for connection requests.
+	 */
+	private void executeSingle(GraphRequest<?> req) {
+		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + req.object, req.method, this.timeout);
+		this.addParams(call, req.params);
+		req.response = this.fetchGraph(call, req.resultType);
+	}
+
 	/**
 	 * Executes the specified old request
 	 */
