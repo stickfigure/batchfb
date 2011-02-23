@@ -34,7 +34,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.codehaus.jackson.JsonNode;
@@ -87,6 +86,7 @@ import com.googlecode.batchfb.util.URLParser;
 public class FacebookBatcher {
 	
 	/** */
+	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(FacebookBatcher.class.getName());
 	
 	/** */
@@ -835,9 +835,6 @@ public class FacebookBatcher {
 		Response<T> response = new Response<T>();
 		
 		try {
-			if (log.isLoggable(Level.FINER))
-				log.finer("Fetching: " + call);
-			
 			HttpURLConnection conn = (HttpURLConnection)call.execute();
 			
 			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK)
@@ -911,9 +908,6 @@ public class FacebookBatcher {
 		Response<T> response = new Response<T>();
 		
 		try {
-			if (log.isLoggable(Level.FINER))
-				log.finer("Fetching: " + call);
-			
 			HttpURLConnection conn = (HttpURLConnection)call.execute();
 			
 			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {

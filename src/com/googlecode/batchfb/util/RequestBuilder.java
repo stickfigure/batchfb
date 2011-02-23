@@ -29,6 +29,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>For building and executing requests.</p>
@@ -36,6 +38,8 @@ import java.util.Map;
  * @author Jeff Schnitzer
  */
 public class RequestBuilder {
+	/** */
+	private static final Logger log = Logger.getLogger(RequestBuilder.class.getName());
 	
 	/** Supported methods */
 	public static enum HttpMethod {
@@ -151,6 +155,9 @@ public class RequestBuilder {
 	 * Create the connection and set the method.
 	 */
 	protected HttpURLConnection createConnection(String url) throws IOException {
+		if (log.isLoggable(Level.FINER))
+			log.finer("Opening: " + url);
+		
 		HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
 		conn.setRequestMethod(this.method.name());
 		
