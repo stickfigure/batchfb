@@ -126,29 +126,30 @@ public class RequestBuilder {
 	 * Execute the request, providing the result in the connection object.
 	 */
 	public HttpURLConnection execute() throws IOException {
-		switch (this.method) {
-			case POST: {
-				HttpURLConnection conn = this.createConnection(this.baseURL);
-				if (!this.params.isEmpty()) {
-					conn.setDoOutput(true);
-					
-					if (!this.hasBinaryAttachments) {
-						// This is more efficient if we don't have any binary attachments
-						conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-						conn.getOutputStream().write(this.createQueryString().getBytes("utf-8"));
-					} else {
-						// Binary attachments requires more complicated multipart/form-data format
-						this.writeMultipart(conn);
-					}
-				}
-				return conn;
-			}
-				
-			default: {
-				HttpURLConnection conn = this.createConnection(this.toString());
-				return conn;
+		if (this.method == HttpMethod.POST)
+			return this.executePost(this.baseURL);
+		else
+			return this.createConnection(this.toString());
+	}
+	
+	/**
+	 * Execute a POST to the specified URL, posting our content as appropriate
+	 */
+	protected HttpURLConnection executePost(String url) throws IOException {
+		HttpURLConnection conn = this.createConnection(url);
+		if (!this.params.isEmpty()) {
+			conn.setDoOutput(true);
+			
+			if (!this.hasBinaryAttachments) {
+				// This is more efficient if we don't have any binary attachments
+				conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+				conn.getOutputStream().write(this.createQueryString().getBytes("utf-8"));
+			} else {
+				// Binary attachments requires more complicated multipart/form-data format
+				this.writeMultipart(conn);
 			}
 		}
+		return conn;
 	}
 	
 	/**

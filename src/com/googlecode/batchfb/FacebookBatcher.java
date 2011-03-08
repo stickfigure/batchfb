@@ -54,6 +54,7 @@ import com.googlecode.batchfb.err.QueryParseException;
 import com.googlecode.batchfb.type.Paged;
 import com.googlecode.batchfb.util.FirstElementLater;
 import com.googlecode.batchfb.util.FirstNodeLater;
+import com.googlecode.batchfb.util.GraphRequestBuilder;
 import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.RequestBuilder;
 import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
@@ -653,7 +654,7 @@ public class FacebookBatcher {
 		// The http method and params will be the same for all, so use the first
 		GraphRequest<?> first = group.getFirst();
 		
-		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT, first.method, this.timeout);
+		RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT, first.method, this.timeout);
 		
 		// We add the generated ids first because of the case where the user chose
 		// to specify all the ids as a Param explicitly.  If that happens, the
@@ -701,7 +702,7 @@ public class FacebookBatcher {
 	 * used for connection requests.
 	 */
 	private void executeSingle(GraphRequest<?> req) {
-		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + req.object, req.method, this.timeout);
+		RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT + req.object, req.method, this.timeout);
 		this.addParams(call, req.params);
 		req.response = this.fetchGraph(call, req.resultType);
 	}
