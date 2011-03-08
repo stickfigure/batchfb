@@ -265,6 +265,11 @@ public class FacebookBatcher {
 	private int timeout = 0;	
 	
 	/**
+	 * Number of retries to execute when a timeout occurs.
+	 */
+	private int retries = 0;
+	
+	/**
 	 * Construct a batcher without an access token. All requests will be unauthenticated.
 	 */
 	public FacebookBatcher() {
@@ -306,6 +311,20 @@ public class FacebookBatcher {
 	 */
 	public int getTimeout() {
 		return this.timeout;
+	}
+	
+	/**
+	 * Sets the number of retries to execute when a timeout occurs.
+	 */
+	public void setRetries(int count) {
+		this.retries = count;
+	}
+	
+	/**
+	 * Gets the number of retries to execute when a timeout occurs.
+	 */
+	public int getRetries() {
+		return this.retries;
 	}
 	
 	/**
@@ -654,7 +673,7 @@ public class FacebookBatcher {
 		// The http method and params will be the same for all, so use the first
 		GraphRequest<?> first = group.getFirst();
 		
-		RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT, first.method, this.timeout);
+		RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT, first.method, this.timeout, this.retries);
 		
 		// We add the generated ids first because of the case where the user chose
 		// to specify all the ids as a Param explicitly.  If that happens, the
@@ -702,7 +721,7 @@ public class FacebookBatcher {
 	 * used for connection requests.
 	 */
 	private void executeSingle(GraphRequest<?> req) {
-		RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT + req.object, req.method, this.timeout);
+		RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT + req.object, req.method, this.timeout, this.retries);
 		this.addParams(call, req.params);
 		req.response = this.fetchGraph(call, req.resultType);
 	}
@@ -712,7 +731,7 @@ public class FacebookBatcher {
 	 */
 	private void execute(OldRequest<?> req) {
 		
-		RequestBuilder call = new RequestBuilder(OLD_REST_ENDPOINT + req.methodName, HttpMethod.GET, this.timeout);
+		RequestBuilder call = new RequestBuilder(OLD_REST_ENDPOINT + req.methodName, HttpMethod.GET, this.timeout, this.retries);
 		
 		this.addParams(call, req.params);
 		

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -70,6 +71,7 @@ public class RequestBuilder {
 	HttpMethod method;
 	boolean hasBinaryAttachments;
 	int timeout;	// 0 for no timeout
+	int retries;	// 0 for no retries
 	
 	/**
 	 * Construct from a base URL like http://api.facebook.com/. It should not have any query parameters or a ?.
@@ -82,9 +84,17 @@ public class RequestBuilder {
 	 * Construct from a base URL like http://api.facebook.com/. It should not have any query parameters or a ?.
 	 */
 	public RequestBuilder(String url, HttpMethod method, int timeout) {
+		this(url, method, timeout, 0);
+	}
+	
+	/**
+	 * Construct from a base URL like http://api.facebook.com/. It should not have any query parameters or a ?.
+	 */
+	public RequestBuilder(String url, HttpMethod method, int timeout, int retries) {
 		this.baseURL = url;
 		this.method = method;
 		this.timeout = timeout;
+		this.retries = retries;
 	}
 	
 	/**
@@ -126,10 +136,50 @@ public class RequestBuilder {
 	 * Execute the request, providing the result in the connection object.
 	 */
 	public HttpURLConnection execute() throws IOException {
-		if (this.method == HttpMethod.POST)
-			return this.executePost(this.baseURL);
-		else
-			return this.createConnection(this.toString());
+		return this.execute(this.method, this.baseURL);
+	}
+	
+	/**
+	 * Execute given the specified http method, retrying up to the allowed number
+	 * of retries.
+	 * @postURL is the url to use if this is a POST request; ignored otherwise.
+	 */
+	protected HttpURLConnection execute(HttpMethod meth, String postURL) throws IOException {
+		if (this.retries == 0) {
+			return this.executeOnce(meth, postURL);
+		} else {
+			for (int i=0; i<=this.retries; i++) {
+				try {
+					return this.executeOnce(meth, postURL);
+				} catch (IOException ex) {
+					// This should just be a check for SocketTimeoutException, but GAE is not
+					// throwing the right exception - it's just IOException with "Timeout while fetching..."
+					if (i < this.retries && (ex instanceof SocketTimeoutException || ex.getMessage().startsWith("Timeout"))) {
+						log.warning("Timeout error");
+					} else {
+						throw ex;
+					}
+				}
+			}
+			
+			// Logically unreachable code, but the compiler doesn't know that
+			return null;
+		}
+	}
+	
+	/**
+	 * Execute given the specified http method once, throwing any exceptions as they come
+	 * @param postURL is the url used if this is a post method; ignored otherwise
+	 */
+	protected HttpURLConnection executeOnce(HttpMethod meth, String postURL) throws IOException {
+		HttpURLConnection conn = (meth == HttpMethod.POST)
+			? this.executePost(postURL)
+			: this.createConnection(this.toString());
+			
+		// This will force the request to complete, causing any timeout exceptions to happen here
+		conn.getResponseCode();
+		
+		return conn;
 	}
 	
 	/**

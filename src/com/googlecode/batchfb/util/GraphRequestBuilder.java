@@ -42,8 +42,8 @@ public class GraphRequestBuilder extends RequestBuilder {
 	/** */
 	private static final Logger log = Logger.getLogger(GraphRequestBuilder.class.getName());
 	
-	/** Arbitrarily chosen value of 1600 seems safe */
-	public static final int DEFAULT_CUTOFF = 1600;
+	/** Arbitrarily chosen value of 2000 seems safe; actual appengine limit is reported to be 2072. */
+	public static final int DEFAULT_CUTOFF = 2000;
 	
 	/** Limit to when we should convert to a POST */
 	int cutoff = DEFAULT_CUTOFF;
@@ -65,7 +65,14 @@ public class GraphRequestBuilder extends RequestBuilder {
 	/**
 	 * Construct from a base URL like http://api.facebook.com/. It should not have any query parameters or a ?.
 	 */
-	public GraphRequestBuilder(String url, HttpMethod method, int timeout, int cutoff) {
+	public GraphRequestBuilder(String url, HttpMethod method, int timeout, int retries) {
+		super(url, method, timeout, retries);
+	}
+	
+	/**
+	 * Construct from a base URL like http://api.facebook.com/. It should not have any query parameters or a ?.
+	 */
+	public GraphRequestBuilder(String url, HttpMethod method, int timeout, int retries, int cutoff) {
 		this(url, method, timeout);
 		this.cutoff = cutoff;
 	}
@@ -83,7 +90,7 @@ public class GraphRequestBuilder extends RequestBuilder {
 					log.finer("URL length " + url.length() + " too long, converting GET to POST: " + url);
 				
 				String rebase = this.baseURL + "?method=GET";
-				return this.executePost(rebase);
+				return this.execute(HttpMethod.POST, rebase);
 			}
 		}
 
