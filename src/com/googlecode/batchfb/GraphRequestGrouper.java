@@ -26,10 +26,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import com.googlecode.batchfb.FacebookBatcher.GraphRequest;
 import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
+import com.googlecode.batchfb.util.SplitterIterator;
 
 /**
  * <p>
@@ -43,7 +45,7 @@ import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
  * 
  * @author Jeff Schnitzer
  */
-class GraphRequestGrouper implements Iterable<LinkedList<GraphRequest<?>>> {
+class GraphRequestGrouper implements Iterable<List<GraphRequest<?>>> {
 	
 	/** */
 	@SuppressWarnings("unused")
@@ -51,14 +53,26 @@ class GraphRequestGrouper implements Iterable<LinkedList<GraphRequest<?>>> {
 	
 	/** Java threading rules allow us to atomically increment this */
 	private static int uniqueValue = 0;
-
+	
 	/**
 	 * Holds a queue of all graph requests to execute.  Note that these are all
 	 * grouped by a stable key version of the params so that graph requests
 	 * that have matching parameters can be batched together.  The key should
 	 * be created with createStableKey().
 	 */
-	private LinkedHashMap<Object, LinkedList<GraphRequest<?>>> requests = new LinkedHashMap<Object, LinkedList<GraphRequest<?>>>();
+	private LinkedHashMap<Object, List<GraphRequest<?>>> requests = new LinkedHashMap<Object, List<GraphRequest<?>>>();
+	
+	/**
+	 * Maximum size of a single batch.  Defaults to 30.
+	 */
+	private int maxBatchSize = 30;
+
+	/**
+	 * Maximum number of things to put in a single batch.
+	 */
+	public void setMaxBatchSize(int max) {
+		this.maxBatchSize = max;
+	}
 	
 	/** 
 	 * Adds the graph request to the proper group based on method and params. 
@@ -66,7 +80,7 @@ class GraphRequestGrouper implements Iterable<LinkedList<GraphRequest<?>>> {
 	public void add(GraphRequest<?> request) {
 		Object stableKey = this.createStableGroupKey(request);
 		
-		LinkedList<GraphRequest<?>> queue = this.requests.get(stableKey);
+		List<GraphRequest<?>> queue = this.requests.get(stableKey);
 		if (queue == null) {
 			queue = new LinkedList<GraphRequest<?>>();
 			this.requests.put(stableKey, queue);
@@ -78,8 +92,11 @@ class GraphRequestGrouper implements Iterable<LinkedList<GraphRequest<?>>> {
 	/**
 	 * Provides an iterator across the groups.  The iterator can remove() whole groups.
 	 */
-	public Iterator<LinkedList<GraphRequest<?>>> iterator() {
-		return this.requests.values().iterator();
+	public Iterator<List<GraphRequest<?>>> iterator() {
+		if (this.maxBatchSize > 0)
+			return new SplitterIterator<GraphRequest<?>>(this.requests.values(), this.maxBatchSize);
+		else
+			return this.requests.values().iterator();
 	}
 	
 	/**

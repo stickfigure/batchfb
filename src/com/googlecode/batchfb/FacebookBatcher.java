@@ -328,6 +328,21 @@ public class FacebookBatcher {
 	}
 	
 	/**
+	 * <p>Maximum number of things to put in a single batch.  As you add more things to
+	 * a single batch, the time FB takes to return it gets longer.  You must balance
+	 * this with timeout and retries to obtain optimum performance and reliability.</p>
+	 * 
+	 * <p>Currently this only affects graph API batching.</p>
+	 * 
+	 * <p>Default value is 30.</p>
+	 * 
+	 * @param max can be 0 to indicate unlimited.
+	 */
+	public void setMaxBatchSize(int max) {
+		this.graphRequests.setMaxBatchSize(max);
+	}
+	
+	/**
 	 * Enqueue a Graph API call. The result will be mapped into the specified class.
 	 * 
 	 * @param object is the object to request, eg "me" or "1234". Doesn't need to start with "/".
@@ -570,9 +585,9 @@ public class FacebookBatcher {
 		// TODO: execute all requests asynchronously in parallel
 		
 		// Handle graph requests in groups
-		Iterator<LinkedList<GraphRequest<?>>> graphRequestGroupIt = this.graphRequests.iterator();
+		Iterator<List<GraphRequest<?>>> graphRequestGroupIt = this.graphRequests.iterator();
 		while (graphRequestGroupIt.hasNext()) {
-			LinkedList<GraphRequest<?>> group = graphRequestGroupIt.next();
+			List<GraphRequest<?>> group = graphRequestGroupIt.next();
 			this.executeGraphGroup(group);
 			graphRequestGroupIt.remove();
 		}
@@ -650,7 +665,7 @@ public class FacebookBatcher {
 	 * @param group must all have the same http method and params 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void executeGraphGroup(LinkedList<GraphRequest<?>> group) {
+	private void executeGraphGroup(List<GraphRequest<?>> group) {
 		// Unfortunately, the Facebook graph API is horrifically broken when it comes
 		// to error handling.  For single requests (ie graph.facebook.com/123), some
 		// values will produce a simple text "false"; when doing multi-requests (using ids=)
@@ -663,15 +678,15 @@ public class FacebookBatcher {
 		// be sent on to executeSingleGraph()
 		
 		// The short-circuit for connections
-		if (group.size() == 1 && group.getFirst().object.contains("/")) {
+		if (group.size() == 1 && group.get(0).object.contains("/")) {
 			// This is easy enough we should just special-case it and remove the
 			// overhead of generating the intermediate JsonNode graph.
-			this.executeSingle(group.getFirst());
+			this.executeSingle(group.get(0));
 			return;
 		}
 		
 		// The http method and params will be the same for all, so use the first
-		GraphRequest<?> first = group.getFirst();
+		GraphRequest<?> first = group.get(0);
 		
 		RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT, first.method, this.timeout, this.retries);
 		
