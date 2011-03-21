@@ -502,7 +502,10 @@ public class FacebookBatcher {
 	 * and will always result in a separate HTTP request.
 	 */
 	public Later<Boolean> delete(String object) {
-		GraphRequest<Boolean> req = new GraphRequest<Boolean>(object, HttpMethod.DELETE, TypeFactory.type(Boolean.class), new Param[0]);
+		// Something is fucked up with java's ability to perform DELETE.  FB's servers always return
+		// 400 Bad Request even though the code is correct.  We will switch all deletes to posts.
+		//GraphRequest<Boolean> req = new GraphRequest<Boolean>(object, HttpMethod.DELETE, TypeFactory.type(Boolean.class), new Param[0]);
+		GraphRequest<Boolean> req = new GraphRequest<Boolean>(object, HttpMethod.POST, TypeFactory.type(Boolean.class), new Param[] { new Param("method", "DELETE") });
 		this.graphRequests.add(req);
 		return req;
 	}
