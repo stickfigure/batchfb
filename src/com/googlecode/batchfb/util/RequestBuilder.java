@@ -174,7 +174,7 @@ public class RequestBuilder {
 	protected HttpURLConnection executeOnce(HttpMethod meth, String postURL) throws IOException {
 		HttpURLConnection conn = (meth == HttpMethod.POST)
 			? this.executePost(postURL)
-			: this.createConnection(this.toString());
+			: this.createConnection(meth, this.toString());
 			
 		// This will force the request to complete, causing any timeout exceptions to happen here
 		conn.getResponseCode();
@@ -186,7 +186,7 @@ public class RequestBuilder {
 	 * Execute a POST to the specified URL, posting our content as appropriate
 	 */
 	protected HttpURLConnection executePost(String url) throws IOException {
-		HttpURLConnection conn = this.createConnection(url);
+		HttpURLConnection conn = this.createConnection(HttpMethod.POST, url);
 		if (!this.params.isEmpty()) {
 			conn.setDoOutput(true);
 			
@@ -205,12 +205,12 @@ public class RequestBuilder {
 	/**
 	 * Create the connection and set the method.
 	 */
-	protected HttpURLConnection createConnection(String url) throws IOException {
+	protected HttpURLConnection createConnection(HttpMethod meth, String url) throws IOException {
 		if (log.isLoggable(Level.FINER))
-			log.finer("Opening: " + url);
+			log.finer(meth + "ing: " + url);
 		
 		HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
-		conn.setRequestMethod(this.method.name());
+		conn.setRequestMethod(meth.name());
 		
 		if (this.timeout > 0) {
 			conn.setConnectTimeout(this.timeout);
