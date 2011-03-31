@@ -45,8 +45,24 @@ public class BasicBatchTests extends TestBase {
 	/**
 	 */
 	@Test
+	public void singleGraphRequestAsNode() throws Exception {
+		Later<JsonNode> node = this.authBatcher.graph("/1047296661");
+		assert "Robert Dobbs".equals(node.get().get("name").getTextValue());
+	}
+	
+	/**
+	 */
+	@Test
+	public void singleGraphRequestAsObject() throws Exception {
+		Later<User> user = this.authBatcher.graph("/1047296661", User.class);
+		assert "Robert Dobbs".equals(user.get().name);
+	}
+
+	/**
+	 */
+	@Test
 	public void singleFqlAsNode() throws Exception {
-		Later<ArrayNode> array = this.anonBatcher.query("SELECT name FROM user WHERE uid = 1047296661");
+		Later<ArrayNode> array = this.authBatcher.query("SELECT name FROM user WHERE uid = 1047296661");
 		assert 1 == array.get().size();
 		assert "Robert Dobbs".equals(array.get().get(0).get("name").getTextValue());
 	}
@@ -55,7 +71,7 @@ public class BasicBatchTests extends TestBase {
 	 */
 	@Test
 	public void singleFqlAsNodeUsingQueryFirst() throws Exception {
-		Later<JsonNode> node = this.anonBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661");
+		Later<JsonNode> node = this.authBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661");
 		assert "Robert Dobbs".equals(node.get().get("name").getTextValue());
 	}
 	
@@ -63,7 +79,7 @@ public class BasicBatchTests extends TestBase {
 	 */
 	@Test
 	public void singleFqlAsObject() throws Exception {
-		Later<List<User>> array = this.anonBatcher.query("SELECT name FROM user WHERE uid = 1047296661", User.class);
+		Later<List<User>> array = this.authBatcher.query("SELECT name FROM user WHERE uid = 1047296661", User.class);
 		assert 1 == array.get().size();
 		assert "Robert Dobbs".equals(array.get().get(0).name);
 	}
@@ -72,23 +88,7 @@ public class BasicBatchTests extends TestBase {
 	 */
 	@Test
 	public void singleFqlAsObjectUsingQueryFirst() throws Exception {
-		Later<User> array = this.anonBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661", User.class);
+		Later<User> array = this.authBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661", User.class);
 		assert "Robert Dobbs".equals(array.get().name);
-	}
-	
-	/**
-	 */
-	@Test
-	public void singleRequestAsNode() throws Exception {
-		Later<JsonNode> node = this.anonBatcher.graph("/1047296661");
-		assert "Robert Dobbs".equals(node.get().get("name").getTextValue());
-	}
-	
-	/**
-	 */
-	@Test
-	public void singleRequestAsObject() throws Exception {
-		Later<User> user = this.anonBatcher.graph("/1047296661", User.class);
-		assert "Robert Dobbs".equals(user.get().name);
 	}
 }

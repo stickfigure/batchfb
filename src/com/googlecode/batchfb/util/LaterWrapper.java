@@ -30,8 +30,8 @@ import com.googlecode.batchfb.err.FacebookException;
  */
 public class LaterWrapper<K, V> implements Later<V>
 {
-	Later<K> orig;
-	V cached;
+	private Later<K> orig;
+	private V cached;
 	
 	public LaterWrapper(Later<K> orig)
 	{

@@ -25,6 +25,7 @@ package com.googlecode.batchfb.test;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import com.googlecode.batchfb.Batcher;
 import com.googlecode.batchfb.FacebookBatcher;
 
 
@@ -39,13 +40,13 @@ public class TestBase {
 	protected static final String ACCESS_TOKEN = System.getProperty("accessToken");
 	
 	/** */
-	protected FacebookBatcher authBatcher;
-	protected FacebookBatcher anonBatcher;
+	protected Batcher authBatcher;
+	protected Batcher anonBatcher;
 	
 	@BeforeMethod
 	public void setUp() throws Exception {
 		this.authBatcher = new FacebookBatcher(ACCESS_TOKEN);
-		this.anonBatcher = new FacebookBatcher();
+		this.anonBatcher = new FacebookBatcher(null);
 	}
 
 	@AfterMethod

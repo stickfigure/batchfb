@@ -24,6 +24,7 @@ package com.googlecode.batchfb.util;
 
 import java.io.IOException;
 
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.googlecode.batchfb.err.FacebookException;
@@ -41,6 +42,17 @@ public class JSONUtils {
 	public static String toJSON(Object value, ObjectMapper mapper) {
 		try {
 			return mapper.writeValueAsString(value);
+		} catch (IOException ex) {
+			throw new FacebookException(ex);
+		}
+	}
+
+	/**
+	 * Parses a string into a JsonNode using the mapper
+	 */
+	public static JsonNode toNode(String value, ObjectMapper mapper) {
+		try {
+			return mapper.readTree(value);
 		} catch (IOException ex) {
 			throw new FacebookException(ex);
 		}

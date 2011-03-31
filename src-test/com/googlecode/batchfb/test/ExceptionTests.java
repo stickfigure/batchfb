@@ -27,9 +27,7 @@ import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
-import com.googlecode.batchfb.err.OAuthAccessTokenException;
 import com.googlecode.batchfb.err.OAuthException;
-import com.googlecode.batchfb.err.QueryParseException;
 
 /**
  * Tests of the exceptions generated.
@@ -52,7 +50,7 @@ public class ExceptionTests extends TestBase {
   /**
    * Make a call to /me without a token
    */
-  @Test(expectedExceptions=QueryParseException.class)
+  @Test(expectedExceptions=OAuthException.class)
   public void makeQueryParseException() throws Exception {
     Later<JsonNode> node = this.anonBatcher.graph("/me");
     node.get();
@@ -61,7 +59,7 @@ public class ExceptionTests extends TestBase {
   /**
    * Make a token-less call to something that requires a token.
    */
-  @Test(expectedExceptions=OAuthAccessTokenException.class)
+  @Test(expectedExceptions=OAuthException.class)
   public void makeOAuthAccessTokenException() throws Exception {
     Later<JsonNode> node = this.anonBatcher.graph("/markzuckerberg/friends");
     node.get();

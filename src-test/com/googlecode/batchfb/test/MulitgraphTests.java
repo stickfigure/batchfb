@@ -44,8 +44,8 @@ public class MulitgraphTests extends TestBase {
 	 */
 	@Test
 	public void multigraphAsNode() throws Exception {
-		Later<JsonNode> mobcast = this.anonBatcher.graph("157841729726");
-		Later<JsonNode> inception = this.anonBatcher.graph("110935752279118");
+		Later<JsonNode> mobcast = this.authBatcher.graph("157841729726");
+		Later<JsonNode> inception = this.authBatcher.graph("110935752279118");
 		assert "Mobcast".equals(mobcast.get().get("name").getTextValue());
 		assert "Inception (2010)".equals(inception.get().get("name").getTextValue());
 	}
@@ -54,8 +54,8 @@ public class MulitgraphTests extends TestBase {
 	 */
 	@Test
 	public void multigraphAsObject() throws Exception {
-		Later<Like> mobcast = this.anonBatcher.graph("157841729726", Like.class);
-		Later<Like> inception = this.anonBatcher.graph("110935752279118", Like.class);
+		Later<Like> mobcast = this.authBatcher.graph("157841729726", Like.class);
+		Later<Like> inception = this.authBatcher.graph("110935752279118", Like.class);
 		assert "Mobcast".equals(mobcast.get().name);
 		assert "Inception (2010)".equals(inception.get().name);
 	}

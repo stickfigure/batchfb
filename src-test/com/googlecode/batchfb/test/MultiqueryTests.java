@@ -38,8 +38,8 @@ public class MultiqueryTests extends TestBase {
    */
   @Test
   public void basicMultiquery() throws Exception {
-    Later<ArrayNode> firstNameArray = this.anonBatcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
-    Later<ArrayNode> lastNameArray = this.anonBatcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
+    Later<ArrayNode> firstNameArray = this.authBatcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
+    Later<ArrayNode> lastNameArray = this.authBatcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
     
     assert 1 == firstNameArray.get().size();
     assert 1 == lastNameArray.get().size();
