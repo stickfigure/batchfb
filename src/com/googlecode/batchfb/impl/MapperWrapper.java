@@ -47,7 +47,9 @@ public class MapperWrapper<T> extends LaterWrapper<JsonNode, T> {
 	
 	/** Use Jackson to map from JsonNode to the type */
 	@Override
+	@SuppressWarnings("unchecked")
 	protected T convert(JsonNode data) {
-		return this.mapper.convertValue(data, this.resultType);
+		// The (T) cast prevents the commandline javac from choking "no unique maximal instance"
+		return (T)this.mapper.convertValue(data, this.resultType);
 	}	
 }
