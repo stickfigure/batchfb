@@ -123,6 +123,9 @@ public class FacebookBatcher implements Batcher {
 	 * Sets the connection timeout in milliseconds.  0 means no timeout.
 	 */
 	public void setTimeout(int millis) {
+		if (!this.batches.isEmpty())
+			throw new IllegalStateException("Can't set timeout after batches have been created");
+		
 		this.timeout = millis;
 	}
 	
@@ -137,6 +140,9 @@ public class FacebookBatcher implements Batcher {
 	 * Sets the number of retries to execute when a timeout occurs.
 	 */
 	public void setRetries(int count) {
+		if (!this.batches.isEmpty())
+			throw new IllegalStateException("Can't set retries after batches have been created");
+		
 		this.retries = count;
 	}
 	
@@ -157,6 +163,9 @@ public class FacebookBatcher implements Batcher {
 	 * <p>Note that you can have virtually unlimited FQL calls.</p>
 	 */
 	public void setMaxBatchSize(int max) {
+		if (!this.batches.isEmpty())
+			throw new IllegalStateException("Can't set max batch size after batches have been created");
+		
 		this.maxBatchSize = max;
 	}
 	
