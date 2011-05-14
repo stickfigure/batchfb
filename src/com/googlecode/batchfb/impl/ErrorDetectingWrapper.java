@@ -38,6 +38,9 @@ import com.googlecode.batchfb.util.LaterWrapper;
  * the correct kind of exception, whatever that happens to be.  It tries to match the
  * type of the exception with an actual exception class of the correct name.</p>
  * 
+ * <p>In addition, this detects the REALLY WEIRD cases where Facebook just spits back
+ * "false".  We translate that into a null.</p>
+ * 
  * <p>If there was no error, this wrapper just passes through normally.</p>
  * 
  * <p>Facebook coughs up errors in at least three different formats.  This
@@ -52,9 +55,14 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 	/** */
 	@Override
 	protected JsonNode convert(JsonNode node) {
+		// Hopefully a simple "false" at the top level is never a legitimate value
+		if (node.isBoolean() && !node.getBooleanValue())
+			return null;
+		
 		this.checkForStandardGraphError(node);
 		this.checkForBatchError(node);
 		this.checkForOldRestStyleError(node);
+		
 		return node;
 	}
 	
