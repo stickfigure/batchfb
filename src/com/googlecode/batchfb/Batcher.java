@@ -136,11 +136,20 @@ public interface Batcher {
 	public Later<Boolean> delete(String object);
 	
 	/**
-	 * Enqueue a post (publish) call to the Graph API.
+	 * Enqueue a post (publish) call to the Graph API.  Assumes the result has the
+	 * standard format for graph posts (a simple string id wrapped in json).
 	 * 
 	 * @param params can include a BinaryParam to post binary objects.
 	 */
 	public Later<String> post(String object, Param... params);
+	
+	/**
+	 * Enqueue a post (publish) call to the Graph API.
+	 * 
+	 * @param type defines the expected return type from the call.
+	 * @param params can include a BinaryParam to post binary objects.
+	 */
+	public <T> Later<T> post(String object, Class<T> type, Param... params);
 	
 	/**
 	 * Immediately start execution of the batch, asynchronously if possible.

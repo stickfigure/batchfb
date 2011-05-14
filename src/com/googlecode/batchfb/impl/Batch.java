@@ -52,6 +52,7 @@ import com.googlecode.batchfb.util.FirstElementLater;
 import com.googlecode.batchfb.util.FirstNodeLater;
 import com.googlecode.batchfb.util.GraphRequestBuilder;
 import com.googlecode.batchfb.util.JSONUtils;
+import com.googlecode.batchfb.util.LaterWrapper;
 import com.googlecode.batchfb.util.RequestBuilder;
 import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
 import com.googlecode.batchfb.util.StringUtils;
@@ -296,6 +297,21 @@ public class Batch implements Batcher, Later<JsonNode> {
 		};
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.googlecode.batchfb.Batcher#post(java.lang.String, com.googlecode.batchfb.Param[])
+	 */
+	@Override
+	public <T> Later<T> post(String object, Class<T> type, Param... params) {
+		this.checkForBatchExecution();
+
+		// The data is transformed through a chain of wrappers
+		GraphRequest<T> req =
+			new GraphRequest<T>(object, HttpMethod.POST, params, this.mapper, this.<T>createMappingChain(TypeFactory.type(type)));
+		
+		this.graphRequests.add(req);
+		return req;
+	}
+	
 	/**
 	 * Adds mapping to the basic unmapped chain.
 	 */
@@ -339,7 +355,8 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 */
 	private Later<JsonNode> getRawBatchResult() {
 		if (this.rawBatchResult == null) {
-			this.rawBatchResult = this.fetch();
+			// Use LaterWrapper to cache the result so we don't fetch over and over
+			this.rawBatchResult = new LaterWrapper<JsonNode, JsonNode>(this.createFetcher());
 			
 			// Also let the master know it's time to kick off any other batches and
 			// remove us as a valid batch to add to.
@@ -364,7 +381,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 * Constructs the batch query and executes it, possibly asynchronously.
 	 * @return an asynchronous handle to the raw batch result, whatever it may be.
 	 */
-	private Later<JsonNode> fetch() {
+	private Later<JsonNode> createFetcher() {
 		final RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT, HttpMethod.POST, this.timeout, this.retries);
 		
 		// This actually creates the correct JSON structure as an array

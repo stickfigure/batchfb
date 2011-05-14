@@ -255,6 +255,15 @@ public class FacebookBatcher implements Batcher {
 		return this.getBatchForGraph().post(object, params);
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.googlecode.batchfb.Batcher#post(java.lang.String, java.lang.Class, com.googlecode.batchfb.Param[])
+	 */
+	@Override
+	public <T> Later<T> post(String object, Class<T> type, Param... params)
+	{
+		return this.getBatchForGraph().post(object, type, params);
+	}
+	
 	/**
 	 * Executes all existing batches and removes them from consideration for further batching.
 	 */

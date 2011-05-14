@@ -191,10 +191,17 @@ public class RequestBuilder {
 			conn.setDoOutput(true);
 			
 			if (!this.hasBinaryAttachments) {
+				String queryString = this.createQueryString();
+				
+				if (log.isLoggable(Level.FINER))
+					log.finer("POST data is: " + queryString);
+				
 				// This is more efficient if we don't have any binary attachments
 				conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-				conn.getOutputStream().write(this.createQueryString().getBytes("utf-8"));
+				conn.getOutputStream().write(queryString.getBytes("utf-8"));
 			} else {
+				log.finer("POST contains binary data, sending multipart/form-data");
+				
 				// Binary attachments requires more complicated multipart/form-data format
 				this.writeMultipart(conn);
 			}
