@@ -23,12 +23,16 @@
 package com.googlecode.batchfb.impl;
 
 import java.lang.reflect.Constructor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.jackson.JsonNode;
 
+import com.googlecode.batchfb.Batcher;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.err.FacebookException;
 import com.googlecode.batchfb.err.OAuthException;
+import com.googlecode.batchfb.err.PageMigratedException;
 import com.googlecode.batchfb.err.PermissionException;
 import com.googlecode.batchfb.err.QueryParseException;
 import com.googlecode.batchfb.util.LaterWrapper;
@@ -90,12 +94,16 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 				return;
 			
 			// Special case, permission exceptions are poorly structured
-			if (type.equals("Exception") && msg.startsWith("(#200)"))
+			if (msg.startsWith("(#200)"))
 				throw new PermissionException(msg);
+			
+			// Special case, migration exceptions are poorly structured
+			if (msg.startsWith("(#21)"))
+				this.throwPageMigratedException(msg);
 			
 			// We check to see if we have an exception that matches the type, otherwise
 			// we simply throw the base FacebookException
-			String proposedExceptionType = this.getClass().getPackage().getName() + ".err." + type;
+			String proposedExceptionType = Batcher.class.getPackage().getName() + ".err." + type;
 			
 			try {
 				Class<?> exceptionClass = Class.forName(proposedExceptionType);
@@ -107,6 +115,38 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 		}
 	}
 	
+	/** Matches IDs in the error msg */
+	private static final Pattern ID_PATTERN = Pattern.compile("ID [0-9]+");
+	
+	/**
+	 * Builds the proper exception and throws it.
+	 * @throws PageMigratedException always
+	 */
+	private void throwPageMigratedException(String msg)
+	{
+		// This SUCKS ASS.  Messages look like:
+		// (#21) Page ID 114267748588304 was migrated to page ID 111013272313096.  Please update your API calls to the new ID
+		
+		Matcher matcher = ID_PATTERN.matcher(msg);
+		
+		long oldId = this.extractNextId(matcher, msg);
+		long newId = this.extractNextId(matcher, msg);
+		
+		throw new PageMigratedException(msg, oldId, newId);
+	}
+
+	/**
+	 * Gets the next id out of the matcher
+	 */
+	private long extractNextId(Matcher matcher, String msg)
+	{
+		if (!matcher.find())
+			throw new IllegalStateException("Facebook changed the error msg for page migration to something unfamiliar. The new msg is: " + msg);
+		
+		String idStr = matcher.group().substring(matcher.start() + "ID ".length(), matcher.end());
+		return Long.parseLong(idStr);
+	}
+
 	/**
 	 * The batch call itself seems to have a funky error format:
 	 * 
