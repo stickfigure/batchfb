@@ -143,7 +143,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 		if (!matcher.find())
 			throw new IllegalStateException("Facebook changed the error msg for page migration to something unfamiliar. The new msg is: " + msg);
 		
-		String idStr = matcher.group().substring(matcher.start() + "ID ".length(), matcher.end());
+		String idStr = matcher.group().substring("ID ".length());
 		return Long.parseLong(idStr);
 	}
 

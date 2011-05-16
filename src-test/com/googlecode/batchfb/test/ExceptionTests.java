@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.err.OAuthException;
+import com.googlecode.batchfb.err.PageMigratedException;
 
 /**
  * Tests of the exceptions generated.
@@ -35,33 +36,47 @@ import com.googlecode.batchfb.err.OAuthException;
  * @author Jeff Schnitzer
  */
 public class ExceptionTests extends TestBase {
+	/**
+	 * Use an invalid token to generate an OAuthException
+	 */
+	@Test(expectedExceptions=OAuthException.class)
+	public void makeOAuthException() throws Exception {
+		FacebookBatcher batcher = new FacebookBatcher("asdf");
 
-  /**
-   * Use an invalid token to generate an OAuthException
-   */
-  @Test(expectedExceptions=OAuthException.class)
-  public void makeOAuthException() throws Exception {
-    FacebookBatcher batcher = new FacebookBatcher("asdf");
-    
-    Later<JsonNode> node = batcher.graph("/me");
-    node.get();
-  }
-  
-  /**
-   * Make a call to /me without a token
-   */
-  @Test(expectedExceptions=OAuthException.class)
-  public void makeQueryParseException() throws Exception {
-    Later<JsonNode> node = this.anonBatcher.graph("/me");
-    node.get();
-  }
+		Later<JsonNode> node = batcher.graph("/me");
+		node.get();
+	}
 
-  /**
-   * Make a token-less call to something that requires a token.
-   */
-  @Test(expectedExceptions=OAuthException.class)
-  public void makeOAuthAccessTokenException() throws Exception {
-    Later<JsonNode> node = this.anonBatcher.graph("/markzuckerberg/friends");
-    node.get();
-  }
+	/**
+	 * Make a call to /me without a token
+	 */
+	@Test(expectedExceptions=OAuthException.class)
+	public void makeQueryParseException() throws Exception {
+		Later<JsonNode> node = this.anonBatcher.graph("/me");
+		node.get();
+	}
+
+	/**
+	 * Make a token-less call to something that requires a token.
+	 */
+	@Test(expectedExceptions=OAuthException.class)
+	public void makeOAuthAccessTokenException() throws Exception {
+		Later<JsonNode> node = this.anonBatcher.graph("/markzuckerberg/friends");
+		node.get();
+	}
+
+	/**
+	 * The Swimming page migrated to a different id
+	 */
+	@Test
+	public void makePageMigratedException() throws Exception {
+		try {
+			Later<JsonNode> node = this.authBatcher.graph("/114267748588304");
+			node.get();
+			assert false;	// should never get here
+		} catch (PageMigratedException ex) {
+			assert ex.getOldId() == 114267748588304L;
+			assert ex.getNewId() == 111013272313096L;
+		}
+	}
 }
