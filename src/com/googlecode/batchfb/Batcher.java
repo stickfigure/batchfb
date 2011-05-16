@@ -64,7 +64,7 @@ public interface Batcher {
 	public <T> GraphRequest<T> graph(String object, Class<T> type, Param... params);
 	
 	/**
-	 * Enqueue a Graph API call. The result will be mapped into the specified type, which can be a generic collection.
+	 * Enqueue a Graph API call. The result will be mapped into the specified type, which can be a generic class.
 	 * 
 	 * @param object is the object to request, eg "me" or "1234". Doesn't need to start with "/".
 	 * @param type is the Jackson type reference to map the result to (see the BatchFB UserGuide).

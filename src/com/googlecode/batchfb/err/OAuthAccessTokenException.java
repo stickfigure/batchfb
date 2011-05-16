@@ -29,6 +29,9 @@ package com.googlecode.batchfb.err;
  * about this, you should catch the base OAuthException instead of directly trying
  * to catch this exception.</p>
  * 
+ * <p>Note:  Facebook seems to have stopped producing this error, using OAuthException
+ * instead.</p>
+ * 
  * @see OAuthException
  * @author Jeff Schnitzer
  */
