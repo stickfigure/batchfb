@@ -24,10 +24,6 @@ package com.googlecode.batchfb.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -47,8 +43,16 @@ public class RequestBuilder {
 		GET, POST, DELETE;
 	}
 	
+	/** Returned by request execution */
+	public static interface HttpResponse {
+		/** The http response code */
+		int getResponseCode() throws IOException;
+		/** The body content of the response */
+		InputStream getContentStream() throws IOException;
+	}
+	
 	/** Used as a param value when user submits binary attachments */
-	private static class BinaryAttachment {
+	public static class BinaryAttachment {
 		InputStream data;
 		String contentType;
 		String filename;
@@ -59,11 +63,6 @@ public class RequestBuilder {
 			this.filename = filename;
 		}
 	}
-	
-	/** */
-	private static final String MULTIPART_BOUNDARY = "**** an awful string which should never exist naturally ****" + Math.random();
-	private static final String MULTIPART_BOUNDARY_SEPARATOR = "--" + MULTIPART_BOUNDARY;
-	private static final String MULTIPART_BOUNDARY_END = MULTIPART_BOUNDARY_SEPARATOR + "--";
 	
 	/** */
 	String baseURL;
@@ -133,98 +132,49 @@ public class RequestBuilder {
 	}
 	
 	/**
-	 * Execute the request, providing the result in the connection object.
+	 * Execute the request, providing the result in the response object - which might be an async wrapper.
 	 */
-	public HttpURLConnection execute() throws IOException {
+	public HttpResponse execute() throws IOException {
 		return this.execute(this.method, this.baseURL);
 	}
 	
 	/**
-	 * Execute given the specified http method, retrying up to the allowed number
-	 * of retries.
+	 * Execute given the specified http method, retrying up to the allowed number of retries.
 	 * @postURL is the url to use if this is a POST request; ignored otherwise.
 	 */
-	protected HttpURLConnection execute(HttpMethod meth, String postURL) throws IOException {
-		if (this.retries == 0) {
-			return this.executeOnce(meth, postURL);
-		} else {
-			for (int i=0; i<=this.retries; i++) {
-				try {
-					return this.executeOnce(meth, postURL);
-				} catch (IOException ex) {
-					// This should just be a check for SocketTimeoutException, but GAE is not
-					// throwing the right exception - it's just IOException with "Timeout while fetching..."
-					if (i < this.retries && (ex instanceof SocketTimeoutException || ex.getMessage().startsWith("Timeout"))) {
-						log.warning("Timeout error");
+	protected HttpResponse execute(final HttpMethod meth, String postURL) throws IOException {
+		final String url = (meth == HttpMethod.POST) ? postURL : this.toString();
+
+		if (log.isLoggable(Level.FINER))
+			log.finer(meth + "ing: " + url);
+
+		return RequestExecutor.instance().execute(this.retries, new RequestSetup() {
+			public void setup(RequestDefinition req) throws IOException {
+				req.init(meth, url);
+				
+				if (timeout > 0)
+					req.setTimeout(timeout);
+				
+				if (meth == HttpMethod.POST && !params.isEmpty()) {
+					if (!hasBinaryAttachments) {
+						String queryString = createQueryString();
+						
+						if (log.isLoggable(Level.FINER))
+							log.finer("POST data is: " + queryString);
+						
+						// This is more efficient if we don't have any binary attachments
+						req.setHeader("Content-Type", "application/x-www-form-urlencoded");
+						req.setContent(queryString.getBytes("utf-8"));
 					} else {
-						throw ex;
+						log.finer("POST contains binary data, sending multipart/form-data");
+						
+						// Binary attachments requires more complicated multipart/form-data format
+						MultipartWriter writer = new MultipartWriter(req);
+						writer.write(params);
 					}
 				}
 			}
-			
-			// Logically unreachable code, but the compiler doesn't know that
-			return null;
-		}
-	}
-	
-	/**
-	 * Execute given the specified http method once, throwing any exceptions as they come
-	 * @param postURL is the url used if this is a post method; ignored otherwise
-	 */
-	protected HttpURLConnection executeOnce(HttpMethod meth, String postURL) throws IOException {
-		HttpURLConnection conn = (meth == HttpMethod.POST)
-			? this.executePost(postURL)
-			: this.createConnection(meth, this.toString());
-			
-		// This will force the request to complete, causing any timeout exceptions to happen here
-		conn.getResponseCode();
-		
-		return conn;
-	}
-	
-	/**
-	 * Execute a POST to the specified URL, posting our content as appropriate
-	 */
-	protected HttpURLConnection executePost(String url) throws IOException {
-		HttpURLConnection conn = this.createConnection(HttpMethod.POST, url);
-		if (!this.params.isEmpty()) {
-			conn.setDoOutput(true);
-			
-			if (!this.hasBinaryAttachments) {
-				String queryString = this.createQueryString();
-				
-				if (log.isLoggable(Level.FINER))
-					log.finer("POST data is: " + queryString);
-				
-				// This is more efficient if we don't have any binary attachments
-				conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-				conn.getOutputStream().write(queryString.getBytes("utf-8"));
-			} else {
-				log.finer("POST contains binary data, sending multipart/form-data");
-				
-				// Binary attachments requires more complicated multipart/form-data format
-				this.writeMultipart(conn);
-			}
-		}
-		return conn;
-	}
-	
-	/**
-	 * Create the connection and set the method.
-	 */
-	protected HttpURLConnection createConnection(HttpMethod meth, String url) throws IOException {
-		if (log.isLoggable(Level.FINER))
-			log.finer(meth + "ing: " + url);
-		
-		HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
-		conn.setRequestMethod(meth.name());
-		
-		if (this.timeout > 0) {
-			conn.setConnectTimeout(this.timeout);
-			conn.setReadTimeout(this.timeout);
-		}
-		
-		return conn;
+		});
 	}
 	
 	/**
@@ -251,43 +201,5 @@ public class RequestBuilder {
 		}
 		
 		return bld.toString();
-	}
-	
-	/**
-	 * Write out params as multipart/form-data, including any binary attachments.
-	 * 
-	 * See <a href="http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4">http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4</a>.
-	 */
-	protected void writeMultipart(HttpURLConnection conn) throws IOException {
-		conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + MULTIPART_BOUNDARY);
-		
-		OutputStream out = conn.getOutputStream();
-		LineWriter writer = new LineWriter(out);
-		
-		for (Map.Entry<String, Object> param: this.params.entrySet()) {
-			writer.println(MULTIPART_BOUNDARY_SEPARATOR);
-			
-			if (param.getValue() instanceof BinaryAttachment) {
-				BinaryAttachment ba = (BinaryAttachment)param.getValue();
-				writer.println("Content-Disposition: form-data; name=\"" + StringUtils.urlEncode(param.getKey()) + "\"; filename=\""
-						+ StringUtils.urlEncode(ba.filename) + "\"");
-				writer.println("Content-Type: " + ba.contentType);
-				writer.println("Content-Transfer-Encoding: binary");
-				writer.println();
-				writer.flush();
-				// Now output the binary part to the raw stream
-				int read;
-				byte[] chunk = new byte[8192];
-				while ((read = ba.data.read(chunk)) > 0)
-					out.write(chunk, 0, read);
-			} else {
-				writer.println("Content-Disposition: form-data; name=\"" + StringUtils.urlEncode(param.getKey()) + "\"");
-				writer.println();
-				writer.println(StringUtils.urlEncode(param.getValue().toString()));
-			}
-		}
-		
-		writer.println(MULTIPART_BOUNDARY_END);
-		writer.flush();
 	}
 }

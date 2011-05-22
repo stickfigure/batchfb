@@ -23,7 +23,6 @@
 package com.googlecode.batchfb.util;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,8 +80,7 @@ public class GraphRequestBuilder extends RequestBuilder {
 	 * Replace excessively-long GET requests with a POST.
 	 */
 	@Override
-	public HttpURLConnection execute() throws IOException
-	{
+	public HttpResponse execute() throws IOException {
 		if (this.method == HttpMethod.GET) {
 			String url = this.toString();
 			if (url.length() > this.cutoff) {

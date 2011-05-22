@@ -12,6 +12,8 @@
 	<property file="${user.home}/build.properties" />
 	<property file="build.properties" />
 
+	<property name="appengine.sdk.dir" location="/Applications/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.5.0.r36v201105101332/appengine-java-sdk-1.5.0" />
+	
 	<property name="build.debug" value="on" />
 	<property name="build.deprecation" value="on" />
 
@@ -38,6 +40,9 @@
 	<path id="master.classpath">		
 		<fileset dir="${lib.dir}">
 			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${appengine.sdk.dir}">
+			<include name="lib/user/*.jar" />
 		</fileset>
 	</path>
 

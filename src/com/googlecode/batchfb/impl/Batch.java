@@ -55,6 +55,7 @@ import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.LaterWrapper;
 import com.googlecode.batchfb.util.RequestBuilder;
 import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
+import com.googlecode.batchfb.util.RequestBuilder.HttpResponse;
 import com.googlecode.batchfb.util.StringUtils;
 
 /**
@@ -389,22 +390,29 @@ public class Batch implements Batcher, Later<JsonNode> {
 
 		this.addParams(call, new Param[] { new Param("batch", batchValue) });
 		
+		final HttpResponse response;
+		try {
+			response = call.execute();
+		} catch (IOException ex) {
+			throw new IOFacebookException(ex);
+		}
+		
 		return new Later<JsonNode>() {
 			@Override
 			public JsonNode get() throws FacebookException
 			{
 				try {
-					HttpURLConnection conn = (HttpURLConnection)call.execute();
-					
-					if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-						return mapper.readTree(conn.getInputStream());
-					} else if (conn.getResponseCode() == HttpURLConnection.HTTP_BAD_REQUEST || conn.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-						// We will recognize the error in the content later. It's possible we should capture all 4XX codes here.
-						return mapper.readTree(conn.getErrorStream());
+					if (response.getResponseCode() == HttpURLConnection.HTTP_OK
+							|| response.getResponseCode() == HttpURLConnection.HTTP_BAD_REQUEST
+							|| response.getResponseCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+						
+						// If it was an error, we will recognize it in the content later.
+						// It's possible we should capture all 4XX codes here.
+						return mapper.readTree(response.getContentStream());
 					} else {
 						throw new IOFacebookException(
-								"Unrecognized error " + conn.getResponseCode() + " '" + conn.getResponseMessage() + "' from "
-								+ call + " :: " + StringUtils.read(conn.getErrorStream()));
+								"Unrecognized error " + response.getResponseCode() + " from "
+								+ call + " :: " + StringUtils.read(response.getContentStream()));
 					}
 				} catch (IOException e) {
 					throw new IOFacebookException("Error calling " + call, e);
