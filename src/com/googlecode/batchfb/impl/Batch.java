@@ -137,10 +137,12 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 * @param master is our parent batcher, probably the FacebookBatcher
 	 * @param accessToken can be null to make unauthenticated FB requests
 	 */
-	public Batch(Batcher master, ObjectMapper mapper, String accessToken) {
+	public Batch(Batcher master, ObjectMapper mapper, String accessToken, int timeout, int retries) {
 		this.master = master;
 		this.mapper = mapper;
 		this.accessToken = accessToken;
+		this.timeout = timeout;
+		this.retries = retries;
 	}
 	
 	/**

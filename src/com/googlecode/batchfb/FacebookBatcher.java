@@ -295,7 +295,7 @@ public class FacebookBatcher implements Batcher {
 		if (lastValidBatch != null && lastValidBatch.graphSize() < this.maxBatchSize)
 			return lastValidBatch;
 		else {
-			Batch next = new Batch(this, this.mapper, this.accessToken);
+			Batch next = new Batch(this, this.mapper, this.accessToken, this.timeout, this.retries);
 			this.batches.add(next);
 			return next;
 		}
