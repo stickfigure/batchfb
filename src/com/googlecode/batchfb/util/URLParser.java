@@ -38,9 +38,26 @@ import com.googlecode.batchfb.Param;
  */
 public class URLParser {
 	
+	/** 
+	 * Breaks down a standard query string (ie "param1=foo&param2=bar")
+	 * @return an empty map if the query is empty or null 
+	 */
+	public static Map<String, String> parseQuery(String query) {
+		Map<String, String> result = new LinkedHashMap<String, String>();
+		
+		if (query != null) {
+			for (String keyValue: query.split("&")) {
+				String[] pair = keyValue.split("=");
+				result.put(StringUtils.urlDecode(pair[0]), StringUtils.urlDecode(pair[1]));
+			}
+		}
+		
+		return result;
+	}
+	
 	/** */
 	URL parsed;
-	Map<String, String> params = new LinkedHashMap<String, String>();
+	Map<String, String> params;
 	
 	/**
 	 * @param url is assumed to be a valid url with properly encoded key=value pairs, nothing exotic
@@ -48,14 +65,7 @@ public class URLParser {
 	public URLParser(String url) {
 		try {
 			this.parsed = new URL(url);
-			
-			String query = this.parsed.getQuery();
-			if (query != null) {
-				for (String keyValue: query.split("&")) {
-					String[] pair = keyValue.split("=");
-					this.params.put(StringUtils.urlDecode(pair[0]), StringUtils.urlDecode(pair[1]));
-				}
-			}
+			this.params = parseQuery(this.parsed.getQuery());
 			
 		} catch (MalformedURLException e) { throw new RuntimeException(e); }
 	}

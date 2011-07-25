@@ -39,6 +39,7 @@ import org.codehaus.jackson.type.TypeReference;
 
 import com.googlecode.batchfb.Batcher;
 import com.googlecode.batchfb.BinaryParam;
+import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.GraphRequest;
 import com.googlecode.batchfb.GraphRequestBase;
 import com.googlecode.batchfb.Later;
@@ -75,9 +76,6 @@ public class Batch implements Batcher, Later<JsonNode> {
 	/** */
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Batch.class.getName());
-	
-	/** */
-	public static final String GRAPH_ENDPOINT = "https://graph.facebook.com/";
 	
 	/** */
 	private static final JavaType JSON_NODE_TYPE = TypeFactory.type(JsonNode.class);
@@ -385,7 +383,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 * @return an asynchronous handle to the raw batch result, whatever it may be.
 	 */
 	private Later<JsonNode> createFetcher() {
-		final RequestBuilder call = new GraphRequestBuilder(GRAPH_ENDPOINT, HttpMethod.POST, this.timeout, this.retries);
+		final RequestBuilder call = new GraphRequestBuilder(FacebookBatcher.GRAPH_ENDPOINT, HttpMethod.POST, this.timeout, this.retries);
 		
 		// This actually creates the correct JSON structure as an array
 		String batchValue = JSONUtils.toJSON(this.graphRequests, this.mapper);

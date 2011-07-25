@@ -22,6 +22,7 @@
 
 package com.googlecode.batchfb;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -35,7 +36,15 @@ import org.codehaus.jackson.map.introspect.VisibilityChecker.Std;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.type.TypeReference;
 
+import com.googlecode.batchfb.err.IOFacebookException;
 import com.googlecode.batchfb.impl.Batch;
+import com.googlecode.batchfb.impl.ErrorDetectingWrapper;
+import com.googlecode.batchfb.util.Now;
+import com.googlecode.batchfb.util.RequestBuilder;
+import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
+import com.googlecode.batchfb.util.RequestBuilder.HttpResponse;
+import com.googlecode.batchfb.util.StringUtils;
+import com.googlecode.batchfb.util.URLParser;
 
 /**
  * Primary implementation of the Batcher interface.
@@ -47,6 +56,50 @@ public class FacebookBatcher implements Batcher {
 	/** */
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(FacebookBatcher.class.getName());
+	
+	/** Base URL for the graph api */
+	public static final String GRAPH_ENDPOINT = "https://graph.facebook.com/";
+	
+	/**
+	 * Get the app access token from Facebook.
+	 * 
+	 * @see https://developers.facebook.com/docs/authentication/ 
+	 */
+	public static String getAppAccessToken(String clientId, String clientSecret) {
+		return getAccessToken(clientId, clientSecret, null);
+	}
+	
+	/**
+	 * Get a user access token from Facebook.  Normally you obtain this from the client-side SDK (javascript, iphone, etc)
+	 * but if you are driving the OAuth flow manually, this method is the last step.
+	 * 
+	 * @see https://developers.facebook.com/docs/authentication/
+	 */
+	public static String getAccessToken(String clientId, String clientSecret, String code) {
+		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + "oauth/access_token", HttpMethod.GET);
+		call.addParam("client_id", clientId);
+		call.addParam("client_secret", clientSecret);
+		if (code != null)
+			call.addParam("code", code);
+		else
+			call.addParam("grant_type", "client_credentials");
+		
+		try {
+			HttpResponse response = call.execute();
+			
+			// Yet more Facebook API stupidity; if the response is OK then we parse as urlencoded params,
+			// otherwise we must parse as JSON and run through the error detector.
+			if (response.getResponseCode() == 200) {
+				return URLParser.parseQuery(StringUtils.read(response.getContentStream())).get("access_token");
+			} else {
+				Later<JsonNode> json = new Now<JsonNode>(new ObjectMapper().readTree(response.getContentStream()));
+				new ErrorDetectingWrapper(json).get();	// This should throw an exception
+				throw new IllegalStateException("Impossible, this should have been detected as an error: " + json);
+			}
+		} catch (IOException ex) {
+			throw new IOFacebookException(ex);
+		}
+	}
 	
 	/**
 	 * Required facebook access token
@@ -83,7 +136,7 @@ public class FacebookBatcher implements Batcher {
 	 * the batches collection.
 	 */
 	private Batch queryBatch;
-	
+
 //	/**
 //	 * Construct a batcher without an access token. All requests will be unauthenticated.
 //	 * JMS: This doesn't work because FB requires a token for Batch requests.  Maybe we
