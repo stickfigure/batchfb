@@ -231,11 +231,17 @@ public class Batch implements Batcher, Later<JsonNode> {
 			this.graphRequests.add(this.multiqueryRequest);
 		}
 		
+		// There is a circular reference between the extractor and request, so construction of the chain
+		// is a little complicated
+		QueryNodeExtractor extractor = new QueryNodeExtractor(this.multiqueryRequest);
+		
 		String name = "__q" + this.generatedQueryNameIndex++;
 		QueryRequest<T> q =
 			new QueryRequest<T>(fql, name,
 				new MapperWrapper<T>(type, this.mapper,
-						new QueryNodeExtractor(this.multiqueryRequest.numQueries(), this.multiqueryRequest)));
+						extractor));
+		
+		extractor.setRequest(q);
 		
 		this.multiqueryRequest.addQuery(q);
 		return q;

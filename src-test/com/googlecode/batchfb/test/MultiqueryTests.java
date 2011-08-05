@@ -22,10 +22,12 @@
 
 package com.googlecode.batchfb.test;
 
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.Later;
+import com.googlecode.batchfb.QueryRequest;
 
 /**
  * Testing out batching of multiqueries.
@@ -34,16 +36,54 @@ import com.googlecode.batchfb.Later;
  */
 public class MultiqueryTests extends TestBase {
 
-  /**
-   */
-  @Test
-  public void basicMultiquery() throws Exception {
-    Later<ArrayNode> firstNameArray = this.authBatcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
-    Later<ArrayNode> lastNameArray = this.authBatcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
-    
-    assert 1 == firstNameArray.get().size();
-    assert 1 == lastNameArray.get().size();
-    assert "Robert".equals(firstNameArray.get().get(0).get("first_name").getTextValue());
-    assert "Dobbs".equals(lastNameArray.get().get(0).get("last_name").getTextValue());
-  }
+	/**
+	 */
+	@Test
+	public void basicMultiquery() throws Exception {
+		Later<ArrayNode> firstNameArray = this.authBatcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
+		Later<ArrayNode> lastNameArray = this.authBatcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
+		
+		assert 1 == firstNameArray.get().size();
+		assert 1 == lastNameArray.get().size();
+		assert "Robert".equals(firstNameArray.get().get(0).get("first_name").getTextValue());
+		assert "Dobbs".equals(lastNameArray.get().get(0).get("last_name").getTextValue());
+	}
+
+	/**
+	 * What happened was the order went q1, q10, q11, q2, q3 and thus fucked it up.  This should
+	 * now work based on proper query name lookup.
+	 */
+	@Test
+	public void moreThanTenQueries() throws Exception {
+		Later<JsonNode> firstName = this.authBatcher.queryFirst("SELECT first_name FROM user WHERE uid = 1047296661");
+		Later<JsonNode> lastName = this.authBatcher.queryFirst("SELECT last_name FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
+		
+		assert "Robert".equals(firstName.get().get("first_name").getTextValue());
+		assert "Dobbs".equals(lastName.get().get("last_name").getTextValue());
+	}
+
+	/**
+	 * Make sure we can explicitly name queries
+	 */
+	@Test
+	public void namedQueries() throws Exception {
+		QueryRequest<ArrayNode> firstNameArray = this.authBatcher.query("SELECT first_name FROM user WHERE uid = 1047296661");
+		firstNameArray.setName("foo");
+		QueryRequest<ArrayNode> lastNameArray = this.authBatcher.query("SELECT last_name FROM user WHERE uid = 1047296661");
+		lastNameArray.setName("bar");
+		
+		assert 1 == firstNameArray.get().size();
+		assert 1 == lastNameArray.get().size();
+		assert "Robert".equals(firstNameArray.get().get(0).get("first_name").getTextValue());
+		assert "Dobbs".equals(lastNameArray.get().get(0).get("last_name").getTextValue());
+	}
 }

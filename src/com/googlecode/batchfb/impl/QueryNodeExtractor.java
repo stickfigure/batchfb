@@ -26,11 +26,13 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
 
 import com.googlecode.batchfb.Later;
+import com.googlecode.batchfb.Request;
 import com.googlecode.batchfb.util.LaterWrapper;
 
 /**
  * <p>Knows how to get the JsonNode for a particular query request out of a multiquery.</p>
- * <p>Sadly, this is what a multiquery result looks like - so it's best to use positional indexing:</p>
+ * 
+ * <p>Sadly, this is what a multiquery result looks like:</p>
 <pre>
 [
   {
@@ -43,36 +45,56 @@ import com.googlecode.batchfb.util.LaterWrapper;
   }
 ]
 </pre>
+ * <p>We'd like to use positional indexing but facebook reorders the results.  So we basically need to
+ * scan through and look for our node.  LAME.</p>
+ * 
+ * <p>Because we need to know the name, the Request<?> (which holds the final name) must be set
+ * after this object is constructed but before it is executed.  It can't be passed in on construction
+ * because the QueryNodeExtractor gets passed in (through a chain of wrappers) to the request.
+ * 
  * <p>More info available here:
  * https://developers.facebook.com/docs/reference/rest/fql.multiquery/
  * </p>
  */
 public class QueryNodeExtractor extends LaterWrapper<JsonNode, JsonNode>
 {
-	int index;
+	Request<?> request;
 
 	/**
 	 * @param multiqueryResult should be the graph selection of a MultiqueryRequest
 	 */
-	public QueryNodeExtractor(int index, Later<JsonNode> multiqueryResult)
-	{
+	public QueryNodeExtractor(Later<JsonNode> multiqueryResult) {
 		super(multiqueryResult);
-		
-		this.index = index;
+	}
+	
+	/**
+	 * Sets the request object related to this query.  The request provides the name
+	 * that we use to extract the result.  This creates a convoluted construction
+	 * process because the Request will actually contain a reference (buried in a chain
+	 * of wrappers) to this QueryNodeExtractor.  This method must be called before
+	 * execution. 
+	 */
+	public void setRequest(Request<?> req) {
+		this.request = req;
 	}
 
 	/** */
 	@Override
-	protected JsonNode convert(JsonNode data)
-	{
+	protected JsonNode convert(JsonNode data) {
+		
 		if (!(data instanceof ArrayNode))
 			throw new IllegalStateException("Expected array node: " + data);
+		
+		// If you have an NPE here it means you didn't initialize the Request properly!
+		String name = this.request.getName();
 
-		JsonNode queryPart = data.get(this.index);
+		for (int i=0; i<data.size(); i++) {
+			JsonNode candidate = data.get(i);
+			
+			if (name.equals(candidate.path("name").getTextValue()))
+				return candidate.get("fql_result_set");
+		}
 		
-//		if (!name.equals(queryPart.get("name").getTextValue()))
-//			throw new IllegalStateException("Expected to find name of '" + name + "' in " + queryPart);
-		
-		return queryPart.get("fql_result_set");
+		throw new IllegalStateException("Didn't find query named '" + name + "' in query results");
 	}
 }
