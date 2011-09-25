@@ -40,10 +40,15 @@ public class FacebookCookie
 	long fbId;
 	public long getFbId() { return this.fbId; }
 
-	/** */
-	@JsonProperty("code")
+	/** For some reason this doesn't seem to be showing up, despite the PHP and Python samples */
+	@JsonProperty("oauth_token")
 	String accessToken;
 	public String getAccessToken() { return this.accessToken; }
+
+	/** This shows up instead of oauth_token, but isn't documented */
+	@JsonProperty("code")
+	String code;
+	public String getCode() { return this.code; }
 
 	/**
 	 * Decodes and validates the cookie.
