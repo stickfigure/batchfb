@@ -16,7 +16,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 
 /**
- * <p>This will decypher and validate the OAuth 2.0 cookie you get from Facebook.  You can recognize it because
+ * <p>This will decipher and validate the OAuth 2.0 cookie you get from Facebook.  You can recognize it because
  * it starts with "fbsr_".  This code does *not* work with the older "fbs_" OAuth 1.0 cookie.</p>
  * 
  * <p>This is the ONLY class in batchfb that relies on commons-codec.  This is just for the Base64 decoder,
