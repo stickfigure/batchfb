@@ -12,7 +12,7 @@
 	<property file="${user.home}/build.properties" />
 	<property file="build.properties" />
 
-	<property name="appengine.sdk.dir" location="/Applications/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.5.3.r37v201108301710/appengine-java-sdk-1.5.3" />
+	<property name="appengine.sdk.dir" location="/Applications/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.5.4.r37v201109211906/appengine-java-sdk-1.5.4" />
 	
 	<property name="build.debug" value="on" />
 	<property name="build.deprecation" value="on" />

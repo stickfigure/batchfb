@@ -32,7 +32,6 @@ import java.util.logging.Logger;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.type.TypeFactory;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.type.JavaType;
 import org.codehaus.jackson.type.TypeReference;
@@ -76,9 +75,6 @@ public class Batch implements Batcher, Later<JsonNode> {
 	/** */
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Batch.class.getName());
-	
-	/** */
-	private static final JavaType JSON_NODE_TYPE = TypeFactory.type(JsonNode.class);
 	
 	/**
 	 * Optional facebook access token
@@ -155,7 +151,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 */
 	@Override
 	public <T> GraphRequest<T> graph(String object, Class<T> type, Param... params) {
-		return this.graph(object, TypeFactory.type(type), params);
+		return this.graph(object, mapper.getTypeFactory().constructType(type), params);
 	}
 	
 	/* (non-Javadoc)
@@ -163,7 +159,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 */
 	@Override
 	public <T> GraphRequest<T> graph(String object, TypeReference<T> type, Param... params) {
-		return this.graph(object, TypeFactory.type(type), params);
+		return this.graph(object, mapper.getTypeFactory().constructType(type), params);
 	}
 	
 	/* (non-Javadoc)
@@ -171,7 +167,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 */
 	@Override
 	public GraphRequest<JsonNode> graph(String object, Param... params) {
-		return this.graph(object, JSON_NODE_TYPE, params);
+		return this.graph(object, JsonNode.class, params);
 	}
 	
 	/**
@@ -197,7 +193,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 			throw new IllegalArgumentException("You can only use paged() for connection requests, eg me/friends");
 
 		// For example if type is User.class, this will produce Paged<User>
-		JavaType pagedType = TypeFactory.parametricType(Paged.class, TypeFactory.type(type));
+		JavaType pagedType = mapper.getTypeFactory().constructParametricType(Paged.class, mapper.getTypeFactory().constructType(type));
 			
 		GraphRequest<Paged<T>> req = this.graph(object, pagedType, params);
 			
@@ -209,7 +205,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 */
 	@Override
 	public <T> QueryRequest<List<T>> query(String fql, Class<T> type) {
-		return this.query(fql, TypeFactory.collectionType(ArrayList.class, type));
+		return this.query(fql, mapper.getTypeFactory().constructCollectionType(ArrayList.class, type));
 	}
 	
 	/* (non-Javadoc)
@@ -217,7 +213,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 */
 	@Override
 	public QueryRequest<ArrayNode> query(String fql) {
-		return this.query(fql, TypeFactory.type(ArrayNode.class));
+		return this.query(fql, mapper.getTypeFactory().constructType(ArrayNode.class));
 	}
 	
 	/**
@@ -274,11 +270,11 @@ public class Batch implements Batcher, Later<JsonNode> {
 		
 		// Something is fucked up with java's ability to perform DELETE.  FB's servers always return
 		// 400 Bad Request even though the code is correct.  We will switch all deletes to posts.
-		//GraphRequest<Boolean> req = new GraphRequest<Boolean>(object, HttpMethod.DELETE, TypeFactory.type(Boolean.class), new Param[0]);
+		//GraphRequest<Boolean> req = new GraphRequest<Boolean>(object, HttpMethod.DELETE, mapper.getTypeFactory().constructType(Boolean.class), new Param[0]);
 
 		GraphRequest<Boolean> req =
 			new GraphRequest<Boolean>(object, HttpMethod.POST, new Param[] { new Param("method", "DELETE") }, this.mapper,
-				this.<Boolean>createMappingChain(TypeFactory.type(Boolean.class)));
+				this.<Boolean>createMappingChain(mapper.getTypeFactory().constructType(Boolean.class)));
 		
 		this.graphRequests.add(req);
 		return req;
@@ -292,7 +288,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 		this.checkForBatchExecution();
 		
 		final GraphRequest<JsonNode> req =
-			new GraphRequest<JsonNode>(object, HttpMethod.POST, params, this.mapper, this.<JsonNode>createMappingChain(JSON_NODE_TYPE));
+			new GraphRequest<JsonNode>(object, HttpMethod.POST, params, this.mapper, this.<JsonNode>createMappingChain(mapper.constructType(JsonNode.class)));
 
 		this.graphRequests.add(req);
 		return new Later<String>() {
@@ -313,7 +309,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 
 		// The data is transformed through a chain of wrappers
 		GraphRequest<T> req =
-			new GraphRequest<T>(object, HttpMethod.POST, params, this.mapper, this.<T>createMappingChain(TypeFactory.type(type)));
+			new GraphRequest<T>(object, HttpMethod.POST, params, this.mapper, this.<T>createMappingChain(mapper.getTypeFactory().constructType(type)));
 		
 		this.graphRequests.add(req);
 		return req;
