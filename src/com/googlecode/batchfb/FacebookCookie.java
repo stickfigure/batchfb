@@ -40,14 +40,14 @@ public class FacebookCookie
 	long fbId;
 	public long getFbId() { return this.fbId; }
 
-	/** Despite being present in Python running samples app, this doesn't seem to actually show up. Expect it to be null. */
 	@JsonProperty("oauth_token")
 	String accessToken;
+	/** Despite being present in Python running samples app, this doesn't seem to actually show up. Expect it to be null. */
 	public String getAccessToken() { return this.accessToken; }
 
-	/** This shows up instead of oauth_token, but isn't documented */
 	@JsonProperty("code")
 	String code;
+	/** This shows up in the cookie payload instead of oauth_token, but isn't documented */
 	public String getCode() { return this.code; }
 
 	/**
