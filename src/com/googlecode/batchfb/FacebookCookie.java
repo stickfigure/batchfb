@@ -40,7 +40,7 @@ public class FacebookCookie
 	long fbId;
 	public long getFbId() { return this.fbId; }
 
-	/** For some reason this doesn't seem to be showing up, despite the PHP and Python samples */
+	/** Despite being present in Python running samples app, this doesn't seem to actually show up. Expect it to be null. */
 	@JsonProperty("oauth_token")
 	String accessToken;
 	public String getAccessToken() { return this.accessToken; }
