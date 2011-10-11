@@ -67,6 +67,7 @@ public class RequestBuilder {
 	/** */
 	String baseURL;
 	Map<String, Object> params = new LinkedHashMap<String, Object>(); // value will be either String or BinaryAttachment
+	Map<String, String> headers = new LinkedHashMap<String, String>();
 	HttpMethod method;
 	boolean hasBinaryAttachments;
 	int timeout;	// 0 for no timeout
@@ -115,6 +116,13 @@ public class RequestBuilder {
 	}
 	
 	/**
+	 * Adds a header.  Value is not encoded in any particular way.
+	 */
+	public void addHeader(String name, String value) {
+		this.headers.put(name, value);
+	}
+	
+	/**
 	 * Set a connection/read timeout, or 0 for no timeout.
 	 */
 	public void setTimeout(int millis) {
@@ -151,6 +159,9 @@ public class RequestBuilder {
 		return RequestExecutor.instance().execute(this.retries, new RequestSetup() {
 			public void setup(RequestDefinition req) throws IOException {
 				req.init(meth, url);
+				
+				for (Map.Entry<String, String> header: headers.entrySet())
+					req.setHeader(header.getKey(), header.getValue());
 				
 				if (timeout > 0)
 					req.setTimeout(timeout);
