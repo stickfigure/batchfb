@@ -174,7 +174,7 @@ public class RequestBuilder {
 							log.finer("POST data is: " + queryString);
 						
 						// This is more efficient if we don't have any binary attachments
-						req.setHeader("Content-Type", "application/x-www-form-urlencoded");
+						req.setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
 						req.setContent(queryString.getBytes("utf-8"));
 					} else {
 						log.finer("POST contains binary data, sending multipart/form-data");
