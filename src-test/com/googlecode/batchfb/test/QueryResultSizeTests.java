@@ -22,24 +22,28 @@
 
 package com.googlecode.batchfb.test;
 
+import java.net.URL;
+import java.net.URLEncoder;
+
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.Later;
 
 /**
- * Testing out simple queries.
+ * Testing a report that sometimes query results return the wrong size.
  * 
  * @author Jeff Schnitzer
  */
-public class SimpleQueryTests extends TestBase {
+public class QueryResultSizeTests extends TestBase {
 
 	/**
 	 */
 	@Test
 	public void basicQuery() throws Exception {
-		Later<ArrayNode> nodes = this.authBatcher.query("SELECT aid FROM album WHERE owner = me()");
-		System.out.println("You have " + nodes.get().size() + " albums");
+		this.ensureQueryIsCorrectSize("SELECT aid FROM album WHERE owner = me()");
 	}
 	
 	/**
@@ -47,7 +51,23 @@ public class SimpleQueryTests extends TestBase {
 	 */
 	@Test
 	public void biggerQuery() throws Exception {
-//		Later<ArrayNode> nodes = this.authBatcher.query("SELECT aid, owner, cover_pid, created, name, description, size, type FROM album WHERE owner IN (SELECT uid2 FROM friend WHERE uid1 = me()) OR owner = me()");
-//		System.out.println("You and your friends have " + nodes.get().size() + " albums");
+		this.ensureQueryIsCorrectSize("SELECT aid, owner, cover_pid, created, name, description, size, type FROM album WHERE owner IN (SELECT uid2 FROM friend WHERE uid1 = me()) OR owner = me()");
+	}
+	
+	/**
+	 * Run the query through BatchFB and by hand and ensure the result set is same size.
+	 */
+	private void ensureQueryIsCorrectSize(String query) throws Exception {
+		String url = "https://api.facebook.com/method/fql.query?format=json&query=" + URLEncoder.encode(query, "utf-8")
+				+ "&access_token=" + ACCESS_TOKEN;
+		URL manual = new URL(url);
+		System.out.println("Manual URL is: " + url);
+		JsonNode manualNodes = new ObjectMapper().readTree(manual.openStream());
+		assert manualNodes instanceof ArrayNode;
+		
+		Later<ArrayNode> nodes = this.authBatcher.query(query);
+		System.out.println("Query obtained " + nodes.get().size() + " items");
+		
+		assert manualNodes.size() == nodes.get().size();
 	}
 }
