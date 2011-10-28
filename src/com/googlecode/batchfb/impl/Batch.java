@@ -28,6 +28,7 @@ import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.codehaus.jackson.JsonNode;
@@ -73,7 +74,6 @@ import com.googlecode.batchfb.util.StringUtils;
 public class Batch implements Batcher, Later<JsonNode> {
 	
 	/** */
-	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(Batch.class.getName());
 	
 	/**
@@ -389,6 +389,8 @@ public class Batch implements Batcher, Later<JsonNode> {
 		
 		// This actually creates the correct JSON structure as an array
 		String batchValue = JSONUtils.toJSON(this.graphRequests, this.mapper);
+		if (log.isLoggable(Level.FINEST))
+			log.finest("Batch request is: " + batchValue);
 
 		this.addParams(call, new Param[] { new Param("batch", batchValue) });
 		
@@ -410,7 +412,12 @@ public class Batch implements Batcher, Later<JsonNode> {
 						
 						// If it was an error, we will recognize it in the content later.
 						// It's possible we should capture all 4XX codes here.
-						return mapper.readTree(response.getContentStream());
+						JsonNode result = mapper.readTree(response.getContentStream());
+						
+						if (log.isLoggable(Level.FINEST))
+							log.finest("Response is: " + result);
+						
+						return result;
 					} else {
 						throw new IOFacebookException(
 								"Unrecognized error " + response.getResponseCode() + " from "
