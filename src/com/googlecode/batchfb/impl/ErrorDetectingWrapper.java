@@ -59,8 +59,9 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 	/** */
 	@Override
 	protected JsonNode convert(JsonNode node) {
-		// Hopefully a simple "false" at the top level is never a legitimate value
-		if (node.isBoolean() && !node.getBooleanValue())
+		// Hopefully a simple "false" at the top level is never a legitimate value... it seems that it should be mapped
+		// to null.  It happens (among other times) when fetching multiple items and you don't have permission on one of them.
+		if (node == null || node.isBoolean() && !node.getBooleanValue())
 			return null;
 		
 		this.checkForStandardGraphError(node);
