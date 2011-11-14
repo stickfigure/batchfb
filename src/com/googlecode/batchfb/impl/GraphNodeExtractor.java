@@ -27,6 +27,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.TextNode;
 
+import com.googlecode.batchfb.err.FacebookException;
 import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.LaterWrapper;
 
@@ -57,6 +58,9 @@ public class GraphNodeExtractor extends LaterWrapper<JsonNode, JsonNode>
 			throw new IllegalStateException("Expected array node: " + data);
 
 		JsonNode batchPart = ((ArrayNode)data).get(this.index);
+		
+		if (batchPart == null)
+			throw new FacebookException("Facebook returned an invalid batch response. There should not be a null at index " + index + " of this array: " + data);
 		
 		// This should be something like:
 		// {
