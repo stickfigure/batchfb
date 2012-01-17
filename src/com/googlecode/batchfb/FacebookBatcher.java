@@ -123,9 +123,9 @@ public class FacebookBatcher implements Batcher {
 	private int retries = 0;
 	
 	/**
-	 * Maximum size of a single batch.  Facebook's limit is currently 20.
+	 * Maximum size of a single batch.  Facebook's limit is currently 50.
 	 */
-	private int maxBatchSize = 20;
+	private int maxBatchSize = 50;
 	
 	/**
 	 * Active batches

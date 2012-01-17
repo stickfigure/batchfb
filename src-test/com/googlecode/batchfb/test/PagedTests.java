@@ -38,7 +38,7 @@ import com.googlecode.batchfb.type.Paged;
  * 
  * @author Jeff Schnitzer
  */
-public class ConnectionTests extends TestBase
+public class PagedTests extends TestBase
 {
 	/**
 	 * Tests using the normal graph() call to get paged data. Expects to find
@@ -104,4 +104,30 @@ public class ConnectionTests extends TestBase
 //
 //		assert nextFeed.get().size() > nextAbridged.get().size();
 	}
+	
+	static class Comment {
+		String id;
+		String message;
+	}
+	
+	static class Photo {
+		String id;
+		String name;
+		Paged<Comment> comments;
+	}
+	
+	/**
+	 * Getting photos and comments.  You'll need to modify this code to reflect your particular photo content.
+	 */
+	@Test
+	public void photos() throws Exception {
+		PagedLater<Photo> photos = this.authBatcher.paged("me/photos", Photo.class);
+		assert photos.get().size() > 0;
+		
+		Photo first = photos.get().get(0);
+		assert first.name.contains("Deadwood mustache");
+		assert first.comments.getData().size() > 0;
+		assert first.comments.getData().get(0).message.contains("Jeff gave up on his");
+	}
+	
 }
