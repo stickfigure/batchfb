@@ -77,6 +77,7 @@ public class FacebookBatcher implements Batcher {
 	 */
 	public static String getAccessToken(String clientId, String clientSecret, String code, String redirectUri) {
 		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + "oauth/access_token", HttpMethod.GET);
+		call.setTimeout(10 * 1000);	// this is a somewhat crude hack but seems reasonable right now
 		call.addParam("client_id", clientId);
 		call.addParam("client_secret", clientSecret);
 		if (code != null || redirectUri != null) {
