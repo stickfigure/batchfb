@@ -113,7 +113,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			} catch (FacebookException e) {
 				throw e;
 			} catch (Exception e) {
-				throw new FacebookException(msg + "(" + type + ")");
+				throw new FacebookException(msg + " (" + type + ")");
 			}
 		}
 	}
