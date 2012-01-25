@@ -110,6 +110,8 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 				Class<?> exceptionClass = Class.forName(proposedExceptionType);
 				Constructor<?> ctor = exceptionClass.getConstructor(String.class);
 				throw (FacebookException)ctor.newInstance(msg);
+			} catch (FacebookException e) {
+				throw e;
 			} catch (Exception e) {
 				throw new FacebookException(msg + "(" + type + ")");
 			}
