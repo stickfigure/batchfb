@@ -23,9 +23,12 @@ public class Request<T> extends LaterWrapper<T, T> {
 	/**
 	 * Set an explicit name that can be referenced later in other requests in the same batch.
 	 * This works within multiquery and within graph calls, but you can't use names across
-	 * the two types of batches. 
+	 * the two types of batches.
+	 * 
+	 * This method can be chained.
 	 */
-	public void setName(String value) {
+	public Request<T> setName(String value) {
 		this.name = value;
+		return this;
 	}
 }
