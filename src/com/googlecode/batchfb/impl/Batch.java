@@ -304,7 +304,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 * @see com.googlecode.batchfb.Batcher#post(java.lang.String, com.googlecode.batchfb.Param[])
 	 */
 	@Override
-	public <T> Later<T> post(String object, Class<T> type, Param... params) {
+	public <T> GraphRequest<T> post(String object, Class<T> type, Param... params) {
 		this.checkForBatchExecution();
 
 		// The data is transformed through a chain of wrappers

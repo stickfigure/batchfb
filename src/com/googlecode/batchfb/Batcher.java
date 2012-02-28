@@ -149,7 +149,7 @@ public interface Batcher {
 	 * @param type defines the expected return type from the call.
 	 * @param params can include a BinaryParam to post binary objects.
 	 */
-	public <T> Later<T> post(String object, Class<T> type, Param... params);
+	public <T> GraphRequest<T> post(String object, Class<T> type, Param... params);
 	
 	/**
 	 * Immediately start execution of the batch, asynchronously if possible.

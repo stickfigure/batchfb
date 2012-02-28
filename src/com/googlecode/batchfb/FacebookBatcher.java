@@ -314,7 +314,7 @@ public class FacebookBatcher implements Batcher {
 	 * @see com.googlecode.batchfb.Batcher#post(java.lang.String, java.lang.Class, com.googlecode.batchfb.Param[])
 	 */
 	@Override
-	public <T> Later<T> post(String object, Class<T> type, Param... params)
+	public <T> GraphRequest<T> post(String object, Class<T> type, Param... params)
 	{
 		return this.getBatchForGraph().post(object, type, params);
 	}
