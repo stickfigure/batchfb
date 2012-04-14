@@ -27,15 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.DeserializationConfig.Feature;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.introspect.VisibilityChecker.Std;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.type.TypeReference;
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.VisibilityChecker.Std;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.googlecode.batchfb.err.IOFacebookException;
 import com.googlecode.batchfb.impl.Batch;
 import com.googlecode.batchfb.impl.ErrorDetectingWrapper;
@@ -160,10 +159,10 @@ public class FacebookBatcher implements Batcher {
 		this.mapper.setVisibilityChecker(Std.defaultInstance().withFieldVisibility(Visibility.NON_PRIVATE));
 		
 		// Shouldn't force users to create classes with all fields
-		this.mapper.configure(Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		
 		// We don't want to send null values to FB for things like omit_response_on_success
-		this.mapper.getSerializationConfig().setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+		this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 	}
 	
 	/**

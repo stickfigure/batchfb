@@ -26,8 +26,7 @@ import java.lang.reflect.Constructor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.codehaus.jackson.JsonNode;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.googlecode.batchfb.Batcher;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.err.FacebookException;
@@ -61,7 +60,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 	protected JsonNode convert(JsonNode node) {
 		// Hopefully a simple "false" at the top level is never a legitimate value... it seems that it should be mapped
 		// to null.  It happens (among other times) when fetching multiple items and you don't have permission on one of them.
-		if (node == null || node.isBoolean() && !node.getBooleanValue())
+		if (node == null || node.isBoolean() && !node.booleanValue())
 			return null;
 		
 		this.checkForStandardGraphError(node);
@@ -86,11 +85,11 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 		JsonNode errorNode = node.get("error");
 		if (errorNode != null) {
 			// If we're missing type or message, it must be some other kind of error
-			String type = errorNode.path("type").getValueAsText();
+			String type = errorNode.path("type").asText();
 			if (type == null)
 				return;
 			
-			String msg = errorNode.path("message").getValueAsText();
+			String msg = errorNode.path("message").asText();
 			if (msg == null)
 				return;
 			
@@ -162,8 +161,8 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			JsonNode errorDescription = root.get("error_description");
 			if (errorDescription != null) {
 				
-				int code = errorCode.getIntValue();
-				String msg = errorDescription.getValueAsText();
+				int code = errorCode.intValue();
+				String msg = errorDescription.asText();
 
 				this.throwCodeAndMessage(code, msg);
 			}
@@ -204,8 +203,8 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 		JsonNode errorCode = node.get("error_code");
 		
 		if (errorCode != null) {
-			int code = errorCode.getIntValue();
-			String msg = node.path("error_msg").getValueAsText();
+			int code = errorCode.intValue();
+			String msg = node.path("error_msg").asText();
 
 			this.throwCodeAndMessage(code, msg);
 		}

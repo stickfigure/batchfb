@@ -1,8 +1,7 @@
 package com.googlecode.batchfb;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.ObjectMapper;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
 
 /**

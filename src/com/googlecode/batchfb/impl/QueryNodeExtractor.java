@@ -22,9 +22,8 @@
 
 package com.googlecode.batchfb.impl;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.Request;
 import com.googlecode.batchfb.util.LaterWrapper;
@@ -91,7 +90,7 @@ public class QueryNodeExtractor extends LaterWrapper<JsonNode, JsonNode>
 		for (int i=0; i<data.size(); i++) {
 			JsonNode candidate = data.get(i);
 			
-			if (name.equals(candidate.path("name").getTextValue()))
+			if (name.equals(candidate.path("name").textValue()))
 				return candidate.get("fql_result_set");
 		}
 		

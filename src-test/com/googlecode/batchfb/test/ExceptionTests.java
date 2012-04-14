@@ -22,9 +22,9 @@
 
 package com.googlecode.batchfb.test;
 
-import org.codehaus.jackson.JsonNode;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.err.OAuthException;

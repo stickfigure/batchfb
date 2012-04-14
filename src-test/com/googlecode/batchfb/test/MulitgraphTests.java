@@ -22,9 +22,9 @@
 
 package com.googlecode.batchfb.test;
 
-import org.codehaus.jackson.JsonNode;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.googlecode.batchfb.Later;
 
 /**
@@ -46,8 +46,8 @@ public class MulitgraphTests extends TestBase {
 	public void multigraphAsNode() throws Exception {
 		Later<JsonNode> mobcast = this.authBatcher.graph("157841729726");
 		Later<JsonNode> inception = this.authBatcher.graph("110935752279118");
-		assert "Mobcast".equals(mobcast.get().get("name").getTextValue());
-		assert "Inception (2010)".equals(inception.get().get("name").getTextValue());
+		assert "Mobcast".equals(mobcast.get().get("name").textValue());
+		assert "Inception (2010)".equals(inception.get().get("name").textValue());
 	}
 	
 	/**

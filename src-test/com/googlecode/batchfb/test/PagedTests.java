@@ -24,9 +24,9 @@ package com.googlecode.batchfb.test;
 
 import java.util.Date;
 
-import org.codehaus.jackson.type.TypeReference;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.PagedLater;
 import com.googlecode.batchfb.Param;

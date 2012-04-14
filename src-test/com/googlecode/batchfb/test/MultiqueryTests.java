@@ -22,10 +22,10 @@
 
 package com.googlecode.batchfb.test;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.QueryRequest;
 
@@ -45,8 +45,8 @@ public class MultiqueryTests extends TestBase {
 		
 		assert 1 == firstNameArray.get().size();
 		assert 1 == lastNameArray.get().size();
-		assert "Robert".equals(firstNameArray.get().get(0).get("first_name").getTextValue());
-		assert "Dobbs".equals(lastNameArray.get().get(0).get("last_name").getTextValue());
+		assert "Robert".equals(firstNameArray.get().get(0).get("first_name").textValue());
+		assert "Dobbs".equals(lastNameArray.get().get(0).get("last_name").textValue());
 	}
 
 	/**
@@ -67,8 +67,8 @@ public class MultiqueryTests extends TestBase {
 		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
 		this.authBatcher.queryFirst("SELECT pic_square FROM user WHERE uid = 1047296661");
 		
-		assert "Robert".equals(firstName.get().get("first_name").getTextValue());
-		assert "Dobbs".equals(lastName.get().get("last_name").getTextValue());
+		assert "Robert".equals(firstName.get().get("first_name").textValue());
+		assert "Dobbs".equals(lastName.get().get("last_name").textValue());
 	}
 
 	/**
@@ -83,7 +83,7 @@ public class MultiqueryTests extends TestBase {
 		
 		assert 1 == firstNameArray.get().size();
 		assert 1 == lastNameArray.get().size();
-		assert "Robert".equals(firstNameArray.get().get(0).get("first_name").getTextValue());
-		assert "Dobbs".equals(lastNameArray.get().get(0).get("last_name").getTextValue());
+		assert "Robert".equals(firstNameArray.get().get(0).get("first_name").textValue());
+		assert "Dobbs".equals(lastNameArray.get().get(0).get("last_name").textValue());
 	}
 }

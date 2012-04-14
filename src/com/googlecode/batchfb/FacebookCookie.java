@@ -10,9 +10,10 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.DeserializationConfig.Feature;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
@@ -28,7 +29,7 @@ public class FacebookCookie
 	/** */
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	static {
-		MAPPER.configure(Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
 	/** */

@@ -31,8 +31,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Date;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.batchfb.BinaryParam;
 import com.googlecode.batchfb.Param;
 

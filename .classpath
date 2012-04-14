@@ -4,8 +4,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="lib" path="lib/build-only/testng-5.13.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-codec-1.5.jar"/>
-	<classpathentry kind="lib" path="lib/jackson-core-asl-1.8.5.jar"/>
-	<classpathentry kind="lib" path="lib/jackson-mapper-asl-1.8.5.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-annotations-2.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-2.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-databind-2.0.0.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="src-test"/>
 	<classpathentry kind="output" path="target/classes"/>

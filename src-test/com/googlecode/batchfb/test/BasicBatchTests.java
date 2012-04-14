@@ -24,10 +24,10 @@ package com.googlecode.batchfb.test;
 
 import java.util.List;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.googlecode.batchfb.Later;
 
 /**
@@ -47,7 +47,7 @@ public class BasicBatchTests extends TestBase {
 	@Test
 	public void singleGraphRequestAsNode() throws Exception {
 		Later<JsonNode> node = this.authBatcher.graph("/1047296661");
-		assert "Robert Dobbs".equals(node.get().get("name").getTextValue());
+		assert "Robert Dobbs".equals(node.get().get("name").textValue());
 	}
 	
 	/**
@@ -64,7 +64,7 @@ public class BasicBatchTests extends TestBase {
 	public void singleFqlAsNode() throws Exception {
 		Later<ArrayNode> array = this.authBatcher.query("SELECT name FROM user WHERE uid = 1047296661");
 		assert 1 == array.get().size();
-		assert "Robert Dobbs".equals(array.get().get(0).get("name").getTextValue());
+		assert "Robert Dobbs".equals(array.get().get(0).get("name").textValue());
 	}
 	
 	/**
@@ -72,7 +72,7 @@ public class BasicBatchTests extends TestBase {
 	@Test
 	public void singleFqlAsNodeUsingQueryFirst() throws Exception {
 		Later<JsonNode> node = this.authBatcher.queryFirst("SELECT name FROM user WHERE uid = 1047296661");
-		assert "Robert Dobbs".equals(node.get().get("name").getTextValue());
+		assert "Robert Dobbs".equals(node.get().get("name").textValue());
 	}
 	
 	/**

@@ -22,11 +22,10 @@
 
 package com.googlecode.batchfb.impl;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.TextNode;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.googlecode.batchfb.err.BrokenFacebookException;
 import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.LaterWrapper;
@@ -73,6 +72,6 @@ public class GraphNodeExtractor extends LaterWrapper<JsonNode, JsonNode>
 		if (body == null)
 			return null;
 		else
-			return JSONUtils.toNode(body.getTextValue(), mapper);
+			return JSONUtils.toNode(body.textValue(), mapper);
 	}
 }

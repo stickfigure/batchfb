@@ -25,11 +25,11 @@ package com.googlecode.batchfb.test;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.googlecode.batchfb.Later;
 
 /**

@@ -22,10 +22,9 @@
 
 package com.googlecode.batchfb.impl;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.JavaType;
-
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.util.LaterWrapper;
 

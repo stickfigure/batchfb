@@ -5,10 +5,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.ObjectMapper;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.batchfb.GraphRequestBase;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.Param;

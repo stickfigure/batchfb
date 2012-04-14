@@ -31,12 +31,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.type.JavaType;
-import org.codehaus.jackson.type.TypeReference;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.googlecode.batchfb.Batcher;
 import com.googlecode.batchfb.BinaryParam;
 import com.googlecode.batchfb.FacebookBatcher;
@@ -295,7 +294,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 			@Override
 			public String get() throws FacebookException
 			{
-				return req.get().path("id").getValueAsText();
+				return req.get().path("id").asText();
 			}
 		};
 	}
