@@ -55,6 +55,7 @@ public class MultipartWriter {
 	 * Write the params as multipart/form-data.  Params can include BinaryAttachemnt objects.
 	 */
 	public void write(Map<String, Object> params) throws IOException {
+		@SuppressWarnings("resource")
 		LineWriter writer = new LineWriter(this.out);
 		
 		for (Map.Entry<String, Object> param: params.entrySet()) {

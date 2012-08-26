@@ -25,7 +25,6 @@ package com.googlecode.batchfb.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.googlecode.batchfb.err.BrokenFacebookException;
 import com.googlecode.batchfb.util.JSONUtils;
 import com.googlecode.batchfb.util.LaterWrapper;
@@ -58,18 +57,18 @@ public class GraphNodeExtractor extends LaterWrapper<JsonNode, JsonNode>
 
 		JsonNode batchPart = ((ArrayNode)data).get(this.index);
 		
-		if (batchPart == null)
+		if (batchPart == null || batchPart.isNull())
 			throw new BrokenFacebookException("Facebook returned an invalid batch response. There should not be a null at index " + index + " of this array: " + data);
 		
 		// This should be something like:
 		// {
 		//   "code": 200,
 		//   "headers": [ { "name":"Content-Type", "value":"text/javascript; charset=UTF-8" } ],
-		//   "body":"{\"id\":\"É\"}"
+		//   "body":"{\"id\":\"asdf\"}"
 		// },
 		
-		TextNode body = (TextNode)batchPart.get("body");
-		if (body == null)
+		JsonNode body = batchPart.get("body");
+		if (body == null || body.isNull())
 			return null;
 		else
 			return JSONUtils.toNode(body.textValue(), mapper);
