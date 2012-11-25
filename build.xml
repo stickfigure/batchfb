@@ -12,7 +12,7 @@
 	<property file="${user.home}/build.properties" />
 	<property file="build.properties" />
 
-	<property name="appengine.sdk.dir" location="../3rdparty/appengine-java-sdk-1.6.5" />
+	<property name="appengine.sdk.dir" location="../appengine-java-sdk" />
 	
 	<property name="build.debug" value="on" />
 	<property name="build.deprecation" value="on" />
