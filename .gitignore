@@ -3,3 +3,5 @@
 /test-output/
 .idea
 *.iml
+.classpath
+.project
