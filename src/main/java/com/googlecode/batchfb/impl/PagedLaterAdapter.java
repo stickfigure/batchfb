@@ -1,13 +1,13 @@
 package com.googlecode.batchfb.impl;
 
-import java.util.List;
-
 import com.googlecode.batchfb.Batcher;
 import com.googlecode.batchfb.GraphRequest;
 import com.googlecode.batchfb.PagedLater;
 import com.googlecode.batchfb.err.FacebookException;
 import com.googlecode.batchfb.type.Paged;
 import com.googlecode.batchfb.util.URLParser;
+
+import java.util.List;
 
 /** Provides paging ability */
 public class PagedLaterAdapter<T> implements PagedLater<T> {
@@ -37,7 +37,7 @@ public class PagedLaterAdapter<T> implements PagedLater<T> {
 	@Override
 	public PagedLater<T> next()
 	{
-		if (this.request.get().getPaging() == null)
+		if (this.request.get().getPaging() == null || this.request.get().getPaging().getNext() == null)
 			return null;
 		else
 			return this.createRequest(this.request.get().getPaging().getNext());
@@ -46,7 +46,7 @@ public class PagedLaterAdapter<T> implements PagedLater<T> {
 	@Override
 	public PagedLater<T> previous()
 	{
-		if (this.request.get().getPaging() == null)
+		if (this.request.get().getPaging() == null || this.request.get().getPaging().getPrevious() == null)
 			return null;
 		else
 			return this.createRequest(this.request.get().getPaging().getPrevious());
