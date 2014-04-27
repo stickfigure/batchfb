@@ -1,3 +1,5 @@
 .svn
 /target/
 /test-output/
+.idea
+*.iml
