@@ -20,33 +20,35 @@
  * THE SOFTWARE.
  */
 
-package com.googlecode.batchfb.err;
+package com.googlecode.batchfb.test.util;
+
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+
+import com.googlecode.batchfb.Batcher;
+import com.googlecode.batchfb.FacebookBatcher;
+
 
 /**
- * <p>Indicates something has failed in the authorization of your application.
- * Unfortunately Facebook is somewhat erratic about the errors it produces:</p>
- * 
- * <ul>
- * <li>Calling http://graph.facebook.com/me/friends without a token produces QueryParseException</li>
- * <li>Calling http://graph.facebook.com/markzuckerberg/friends without a token produces OAuthAccessTokenException</li>
- * <li>Calling any graph method with a malformed access token produces OAuthException</li>
- * <li>Calling any graph method with an expired access token produces OAuthException</li>
- * </ul>
- * 
- * <p>In general, you should be wary of catching exceptions more specific than OAuthException.</p> 
- * 
- * <p>While the name of this exception is derived from the error produced by the Graph API,
- * BatchFB will throw this exception when the Old REST API produces an "equivalent" error.</p>
+ * Some simple tools common to all tests
  * 
  * @author Jeff Schnitzer
  */
-public class OAuthException extends CodedFacebookException {
-	private static final long serialVersionUID = 1L;
+public class TestBase {
 	
-	/** Make GWT happy */
-	OAuthException() {}
+	/** This should be set on the command line with a -DaccessToken=BLAH argument */
+	protected static final String ACCESS_TOKEN = System.getProperty("accessToken");
+	
+	/** */
+	protected Batcher authBatcher;
 
-	public OAuthException(String message, int code, int subcode) {
-		super(message, code, subcode);
+	@BeforeMethod
+	public void setUp() throws Exception {
+		this.authBatcher = new FacebookBatcher(ACCESS_TOKEN);
+	}
+
+	@AfterMethod
+	public void tearDown() throws Exception {
+		this.authBatcher = null;
 	}
 }

@@ -7,7 +7,7 @@ package com.googlecode.batchfb.err;
  * the error text from both the Graph API and Old REST API.  It's error 200, if you're
  * wondering.
  */
-public class PermissionException extends FacebookException
+public class PermissionException extends CodedFacebookException
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -15,8 +15,8 @@ public class PermissionException extends FacebookException
 	PermissionException() {}
 	
 	/** */
-	public PermissionException(String msg)
+	public PermissionException(String msg, int code, int subcode)
 	{
-		super(msg);
+		super(msg, code, subcode);
 	}
 }

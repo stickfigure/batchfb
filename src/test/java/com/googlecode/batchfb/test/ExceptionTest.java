@@ -22,6 +22,7 @@
 
 package com.googlecode.batchfb.test;
 
+import com.googlecode.batchfb.test.util.TestBase;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,7 +36,7 @@ import com.googlecode.batchfb.err.PageMigratedException;
  * 
  * @author Jeff Schnitzer
  */
-public class ExceptionTests extends TestBase {
+public class ExceptionTest extends TestBase {
 	/**
 	 * Use an invalid token to generate an OAuthException
 	 */
@@ -47,23 +48,23 @@ public class ExceptionTests extends TestBase {
 		node.get();
 	}
 
-	/**
-	 * Make a call to /me without a token
-	 */
-	@Test(expectedExceptions=OAuthException.class)
-	public void makeQueryParseException() throws Exception {
-		Later<JsonNode> node = this.anonBatcher.graph("/me");
-		node.get();
-	}
-
-	/**
-	 * Make a token-less call to something that requires a token.
-	 */
-	@Test(expectedExceptions=OAuthException.class)
-	public void makeOAuthAccessTokenException() throws Exception {
-		Later<JsonNode> node = this.anonBatcher.graph("/markzuckerberg/friends");
-		node.get();
-	}
+//	/**
+//	 * Make a call to /me without a token
+//	 */
+//	@Test(expectedExceptions=OAuthException.class)
+//	public void makeQueryParseException() throws Exception {
+//		Later<JsonNode> node = this.anonBatcher.graph("/me");
+//		node.get();
+//	}
+//
+//	/**
+//	 * Make a token-less call to something that requires a token.
+//	 */
+//	@Test(expectedExceptions=OAuthException.class)
+//	public void makeOAuthAccessTokenException() throws Exception {
+//		Later<JsonNode> node = this.anonBatcher.graph("/markzuckerberg/friends");
+//		node.get();
+//	}
 
 	/**
 	 * The Swimming page migrated to a different id

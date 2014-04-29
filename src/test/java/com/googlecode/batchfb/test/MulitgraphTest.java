@@ -22,36 +22,42 @@
 
 package com.googlecode.batchfb.test;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import com.googlecode.batchfb.test.util.TestBase;
+import org.testng.annotations.Test;
 
-import com.googlecode.batchfb.Batcher;
-import com.googlecode.batchfb.FacebookBatcher;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.googlecode.batchfb.Later;
 
 /**
- * Some simple tools common to all tests
+ * Unit testing multiple graph calls batched together.
  * 
  * @author Jeff Schnitzer
  */
-public class TestBase {
-	
-	/** This should be set on the command line with a -DaccessToken=BLAH argument */
-	protected static final String ACCESS_TOKEN = System.getProperty("accessToken");
+public class MulitgraphTest extends TestBase {
 	
 	/** */
-	protected Batcher authBatcher;
-	protected Batcher anonBatcher;
-	
-	@BeforeMethod
-	public void setUp() throws Exception {
-		this.authBatcher = new FacebookBatcher(ACCESS_TOKEN);
-		this.anonBatcher = new FacebookBatcher(null);
+	static class Like {
+		public String id;
+		public String name;
 	}
-
-	@AfterMethod
-	public void tearDown() throws Exception {
-		this.authBatcher = null;
-		this.anonBatcher = null;
+	
+	/**
+	 */
+	@Test
+	public void multigraphAsNode() throws Exception {
+		Later<JsonNode> mobcast = this.authBatcher.graph("157841729726");
+		Later<JsonNode> inception = this.authBatcher.graph("110935752279118");
+		assert "Mobcast".equals(mobcast.get().get("name").textValue());
+		assert "Inception (2010)".equals(inception.get().get("name").textValue());
+	}
+	
+	/**
+	 */
+	@Test
+	public void multigraphAsObject() throws Exception {
+		Later<Like> mobcast = this.authBatcher.graph("157841729726", Like.class);
+		Later<Like> inception = this.authBatcher.graph("110935752279118", Like.class);
+		assert "Mobcast".equals(mobcast.get().name);
+		assert "Inception (2010)".equals(inception.get().name);
 	}
 }

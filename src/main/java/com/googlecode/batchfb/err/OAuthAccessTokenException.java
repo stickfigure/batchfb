@@ -41,7 +41,7 @@ public class OAuthAccessTokenException extends OAuthException {
 	/** Make GWT happy */
 	OAuthAccessTokenException() {}
 
-	public OAuthAccessTokenException(String message) {
-		super(message);
+	public OAuthAccessTokenException(String message, int code, int subcode) {
+		super(message, code, subcode);
 	}
 }

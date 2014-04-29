@@ -24,6 +24,7 @@ package com.googlecode.batchfb.test;
 
 import java.util.List;
 
+import com.googlecode.batchfb.test.util.TestBase;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,7 +36,7 @@ import com.googlecode.batchfb.Later;
  * 
  * @author Jeff Schnitzer
  */
-public class BasicBatchTests extends TestBase {
+public class BasicBatchTest extends TestBase {
 	
 	/** */
 	static class User {

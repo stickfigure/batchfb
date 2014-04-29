@@ -10,7 +10,7 @@ package com.googlecode.batchfb.err;
  * The actual extraction of ids from the msg text (which relies on java regexes) has
  * been removed from this class so that it can be used in GWT. 
  */
-public class PageMigratedException extends FacebookException
+public class PageMigratedException extends CodedFacebookException
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -26,9 +26,9 @@ public class PageMigratedException extends FacebookException
 	public long getNewId() { return this.newId; }
 	
 	/** */
-	public PageMigratedException(String msg, long oldId, long newId)
+	public PageMigratedException(String msg, int code, int subcode, long oldId, long newId)
 	{
-		super(msg);
+		super(msg, code, subcode);
 		this.oldId = oldId;
 		this.newId = newId;
 	}

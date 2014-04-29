@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.googlecode.batchfb.test.util.TestBase;
 import org.testng.annotations.Test;
 
 import com.googlecode.batchfb.util.SplitterIterator;
@@ -36,7 +37,7 @@ import com.googlecode.batchfb.util.SplitterIterator;
  * 
  * @author Jeff Schnitzer
  */
-public class UtilsTests extends TestBase {
+public class UtilsTest extends TestBase {
 	
 	/**
 	 */

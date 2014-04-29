@@ -24,6 +24,7 @@ package com.googlecode.batchfb.test;
 
 import java.util.Date;
 
+import com.googlecode.batchfb.test.util.TestBase;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -38,7 +39,7 @@ import com.googlecode.batchfb.type.Paged;
  * 
  * @author Jeff Schnitzer
  */
-public class PagedTests extends TestBase
+public class PagedTest extends TestBase
 {
 	/**
 	 * Tests using the normal graph() call to get paged data. Expects to find

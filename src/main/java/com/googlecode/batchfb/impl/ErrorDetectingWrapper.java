@@ -22,19 +22,20 @@
 
 package com.googlecode.batchfb.impl;
 
-import java.lang.reflect.Constructor;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.googlecode.batchfb.Batcher;
 import com.googlecode.batchfb.Later;
+import com.googlecode.batchfb.err.CodedFacebookException;
 import com.googlecode.batchfb.err.FacebookException;
 import com.googlecode.batchfb.err.OAuthException;
 import com.googlecode.batchfb.err.PageMigratedException;
 import com.googlecode.batchfb.err.PermissionException;
 import com.googlecode.batchfb.err.QueryParseException;
 import com.googlecode.batchfb.util.LaterWrapper;
+
+import java.lang.reflect.Constructor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>Detects a Facebook error in the JSON result from a Graph API request and throws
@@ -92,14 +93,17 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			String msg = errorNode.path("message").asText();
 			if (msg == null)
 				return;
+
+			int code = errorNode.path("code").asInt(-1);
+			int subcode = errorNode.path("error_subcode").asInt();
 			
 			// Special case, permission exceptions are poorly structured
 			if (msg.startsWith("(#200)"))
-				throw new PermissionException(msg);
+				throw new PermissionException(msg, code, subcode);
 			
 			// Special case, migration exceptions are poorly structured
 			if (msg.startsWith("(#21)"))
-				this.throwPageMigratedException(msg);
+				this.throwPageMigratedException(msg, code, subcode);
 			
 			// We check to see if we have an exception that matches the type, otherwise
 			// we simply throw the base FacebookException
@@ -107,12 +111,12 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			
 			try {
 				Class<?> exceptionClass = Class.forName(proposedExceptionType);
-				Constructor<?> ctor = exceptionClass.getConstructor(String.class);
+				Constructor<?> ctor = exceptionClass.getConstructor(String.class, Integer.TYPE, Integer.TYPE);
 				throw (FacebookException)ctor.newInstance(msg);
 			} catch (FacebookException e) {
 				throw e;
 			} catch (Exception e) {
-				throw new FacebookException(type + ": " + msg);
+				throw new CodedFacebookException(type + ": " + msg, code, subcode);
 			}
 		}
 	}
@@ -124,7 +128,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 	 * Builds the proper exception and throws it.
 	 * @throws PageMigratedException always
 	 */
-	private void throwPageMigratedException(String msg)
+	private void throwPageMigratedException(String msg, int code, int subcode)
 	{
 		// This SUCKS ASS.  Messages look like:
 		// (#21) Page ID 114267748588304 was migrated to page ID 111013272313096.  Please update your API calls to the new ID
@@ -134,7 +138,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 		long oldId = this.extractNextId(matcher, msg);
 		long newId = this.extractNextId(matcher, msg);
 		
-		throw new PageMigratedException(msg, oldId, newId);
+		throw new PageMigratedException(msg, code, subcode, oldId, newId);
 	}
 
 	/**
@@ -219,13 +223,13 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			case 0:
 			case 101:
 			case 102:
-			case 190: throw new OAuthException(msg);
+			case 190: throw new OAuthException(msg, code, -1);
 			
 			default:
 				if (code >= 200 && code < 300)
-					throw new PermissionException(msg);
+					throw new PermissionException(msg, code, -1);
 				else if (code >= 600 && code < 700)
-					throw new QueryParseException(msg);
+					throw new QueryParseException(msg, code, -1);
 				else
 					throw new FacebookException(msg + " (code " + code +")");
 		}

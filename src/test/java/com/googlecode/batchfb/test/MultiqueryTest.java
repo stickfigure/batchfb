@@ -22,6 +22,7 @@
 
 package com.googlecode.batchfb.test;
 
+import com.googlecode.batchfb.test.util.TestBase;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,7 +35,7 @@ import com.googlecode.batchfb.QueryRequest;
  * 
  * @author Jeff Schnitzer
  */
-public class MultiqueryTests extends TestBase {
+public class MultiqueryTest extends TestBase {
 
 	/**
 	 */

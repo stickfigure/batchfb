@@ -20,43 +20,45 @@
  * THE SOFTWARE.
  */
 
-package com.googlecode.batchfb.test;
-
-import org.testng.annotations.Test;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.googlecode.batchfb.Later;
+package com.googlecode.batchfb.err;
 
 /**
- * Unit testing multiple graph calls batched together.
- * 
+ * Adds the code and subcode that facebook includes when it gives us a proper JSON error response.
+ *
  * @author Jeff Schnitzer
  */
-public class MulitgraphTests extends TestBase {
-	
+public class CodedFacebookException extends FacebookException {
+
+	private static final long serialVersionUID = 1L;
+
+	/** Facebook's 'code' */
+	int code;
+
+	/** Facebook's 'error_subcode' */
+	int subcode;
+
+	/** Make GWT happy */
+	CodedFacebookException() {}
+
+	/**
+	 */
+	public CodedFacebookException(String message, int code, int subcode) {
+		super(message);
+		this.code = code;
+		this.subcode = subcode;
+	}
+
+	/**
+	 */
+	public CodedFacebookException(String message, int code, int subcode, Throwable cause) {
+		super(message, cause);
+		this.code = code;
+		this.subcode = subcode;
+	}
+
 	/** */
-	static class Like {
-		public String id;
-		public String name;
-	}
-	
-	/**
-	 */
-	@Test
-	public void multigraphAsNode() throws Exception {
-		Later<JsonNode> mobcast = this.authBatcher.graph("157841729726");
-		Later<JsonNode> inception = this.authBatcher.graph("110935752279118");
-		assert "Mobcast".equals(mobcast.get().get("name").textValue());
-		assert "Inception (2010)".equals(inception.get().get("name").textValue());
-	}
-	
-	/**
-	 */
-	@Test
-	public void multigraphAsObject() throws Exception {
-		Later<Like> mobcast = this.authBatcher.graph("157841729726", Like.class);
-		Later<Like> inception = this.authBatcher.graph("110935752279118", Like.class);
-		assert "Mobcast".equals(mobcast.get().name);
-		assert "Inception (2010)".equals(inception.get().name);
-	}
+	public int getCode() { return code; }
+
+	/** */
+	public int getSubcode() { return subcode; }
 }

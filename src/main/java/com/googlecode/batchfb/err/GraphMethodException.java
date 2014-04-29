@@ -29,13 +29,13 @@ package com.googlecode.batchfb.err;
  *
  * @author Jeff Schnitzer
  */
-public class GraphMethodException extends FacebookException {
+public class GraphMethodException extends CodedFacebookException {
 	private static final long serialVersionUID = 1L;
 
 	/** Make GWT happy */
 	GraphMethodException() {}
 
-	public GraphMethodException(String message) {
-		super(message);
+	public GraphMethodException(String message, int code, int subcode) {
+		super(message, code, subcode);
 	}
 }

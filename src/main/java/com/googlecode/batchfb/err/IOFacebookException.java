@@ -46,7 +46,7 @@ public class IOFacebookException extends FacebookException {
 	public IOFacebookException(String message) {
 		super(message);
 	}
-	
+
 	public IOFacebookException(Throwable cause) {
 		super(cause);
 	}

@@ -33,15 +33,7 @@ public class BrokenFacebookException extends FacebookException {
 	/** Make GWT happy */
 	BrokenFacebookException() {}
 
-	public BrokenFacebookException(String message, Throwable cause) {
-		super(message, cause);
-	}
-	
 	public BrokenFacebookException(String message) {
 		super(message);
-	}
-	
-	public BrokenFacebookException(Throwable cause) {
-		super(cause);
 	}
 }

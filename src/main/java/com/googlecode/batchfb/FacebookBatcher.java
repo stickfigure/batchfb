@@ -22,11 +22,6 @@
 
 package com.googlecode.batchfb;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -45,6 +40,11 @@ import com.googlecode.batchfb.util.RequestBuilder.HttpResponse;
 import com.googlecode.batchfb.util.StringUtils;
 import com.googlecode.batchfb.util.URLParser;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
 /**
  * Primary implementation of the Batcher interface.
  * 
@@ -62,7 +62,7 @@ public class FacebookBatcher implements Batcher {
 	/**
 	 * Get the app access token from Facebook.
 	 * 
-	 * @see https://developers.facebook.com/docs/authentication/ 
+	 * see https://developers.facebook.com/docs/authentication/
 	 */
 	public static String getAppAccessToken(String clientId, String clientSecret) {
 		return getAccessToken(clientId, clientSecret, null, null);
@@ -72,7 +72,7 @@ public class FacebookBatcher implements Batcher {
 	 * Get a user access token from Facebook.  Normally you obtain this from the client-side SDK (javascript, iphone, etc)
 	 * but if you are driving the OAuth flow manually, this method is the last step.
 	 * 
-	 * @see https://developers.facebook.com/docs/authentication/
+	 * see https://developers.facebook.com/docs/authentication/
 	 */
 	public static String getAccessToken(String clientId, String clientSecret, String code, String redirectUri) {
 		RequestBuilder call = new RequestBuilder(GRAPH_ENDPOINT + "oauth/access_token", HttpMethod.GET);
