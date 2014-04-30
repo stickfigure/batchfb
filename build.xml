@@ -1,191 +1,30 @@
 <?xml version="1.0"?>
-
 <!--
-	Build file for BatchFB.
+	Used only to sync javadocs. Once upon a time we used ant to build this project, and this is all that remains.
 -->
 
-<project name="batchfb" default="jar" basedir=".">
-
+<project name="batchfb" default="syncjavadoc" basedir=".">
 	<property name="name" value="${ant.project.name}" />
-	
+
 	<property file="user.properties" />
 	<property file="${user.home}/build.properties" />
 	<property file="build.properties" />
 
-	<property name="appengine.sdk.dir" location="../appengine-java-sdk" />
-	
 	<property name="build.debug" value="on" />
 	<property name="build.deprecation" value="on" />
 
-	<property name="ant.build.javac.target" value="1.6" />
-	<property name="ant.build.javac.source" value="1.6" />
-
 	<property name="build.dir" location="target" />
-	<property name="build.classes.dir" location="${build.dir}/classes" />
-	<property name="build.javadoc.dir" location="${build.dir}/javadoc" />
+	<property name="build.javadoc.dir" location="${build.dir}/apidocs" />
 
-	<property name="docs.dir" value="${build.dir}/docs" />
-	<property name="javadoc.dir" value="javadoc" />
-	
-	<property name="googlecode.projectname" value="batchfb"/>
-
-	<property name="lib.dir" location="lib" />
-	<property name="src.dir" location="src" />
-	
-	<tstamp/>
-	<tstamp>
-		<format property="YEAR" pattern="yyyy" />
-	</tstamp>
-
-	<path id="master.classpath">		
-		<fileset dir="${lib.dir}">
-			<include name="**/*.jar" />
-		</fileset>
-		<fileset dir="${appengine.sdk.dir}">
-			<include name="lib/user/*.jar" />
-		</fileset>
-	</path>
-
-	<path id="run.classpath">
-		<pathelement location="${build.classes.dir}" />
-		<path refid="master.classpath" />
-	</path>
-
-	<taskdef resource="net/sf/antcontrib/antlib.xml" classpathref="master.classpath"/>
-	<taskdef resource="com/googlecode/svntask/svntask.xml" classpathref="master.classpath"/>
-
-	<target name="init">
-		<tstamp>
-			<format property="YEAR" pattern="yyyy" />
-		</tstamp>
-
-        <svn><info path="${basedir}" revisionProperty="revisionVersion" /></svn>
-        <property name="build.version" value="${revisionVersion}" />
-	</target>
+	<property name="javadoc.dir" value="../batchfb-docs/apidocs" />
 
 	<target name="clean">
 		<delete dir="${build.dir}" />
 	</target>
-	
- 	<target name="classes" depends="init">
-		<mkdir dir="${build.classes.dir}" />
- 		
-		<javac srcdir="${src.dir}"
-				destdir="${build.classes.dir}"
-				debug="${build.debug}"
-				deprecation="${build.deprecation}"
-			>
-			<classpath refid="master.classpath" />
-		</javac>
-	</target>
 
-	<target name="jar" depends="classes">
-		<property name="build.jar.file" location="${build.dir}/${name}-${build.version}.jar" />
-		<property name="build.sources.file" location="${build.dir}/${name}-${build.version}-src.zip" />
-		
-		<jar destfile="${build.jar.file}">
-			<manifest>
-				<attribute name="Specification-Version" value="${build.version}" />
-				<attribute name="Implementation-Version" value="${TODAY}" />
-			</manifest>
-			
-			<metainf dir="${src.dir}/META-INF">
-			</metainf>
-			
-			<fileset dir="${build.classes.dir}">
-				<exclude name="**/test/**"/>
-			</fileset>
-			<fileset dir="${src.dir}">
-				<include name="**/*.gwt.xml"/>
-				<include name="**/err/**"/>
-			</fileset>
-		</jar>
-		
-		<jar zipfile="${build.sources.file}">
-			<fileset dir="${src.dir}" includes="**/*.java"/>
-		</jar>
-	</target>
-	
-	<target name="init-version">
-		<input addproperty="build.version" message="Version number?" />
-	</target>
-
-	<target name="javadoc" depends="init-version, classes">
-		<javadoc
-			destdir="${build.javadoc.dir}"
-			packagenames="*"
-			classpathref="run.classpath"
-			author="true"
-			version="true"
-			Windowtitle="BatchFB Javadoc"
-		>
-			<fileset dir="${src.dir}"/>
-			<doctitle><![CDATA[<h1>BatchFB</h1>]]></doctitle>
-			<bottom><![CDATA[<i>Copyright &#169; ${YEAR} Jeff Schnitzer and a ship of thieves. All Rights Reserved. Build version: ${build.version}</i>]]></bottom>
-		</javadoc>
-		
+	<target name="syncjavadoc">
 		<sync todir="${javadoc.dir}" includeEmptyDirs="true">
 			<fileset dir="${build.javadoc.dir}" />
-			<preserveintarget>
-				<include name="**/.svn/**"/>
-			</preserveintarget>
 		</sync>
-	</target>
-	
-	<target name="dist" depends="clean, init-version, jar, build-docs">
-		<property name="build.dist.dir" location="${build.dir}/${ant.project.name}-${build.version}"/>
-        <property name="build.dist.zip" location="${build.dir}/${ant.project.name}-${build.version}.zip"/>
-
-		<copy todir="${build.dist.dir}">
-	        <fileset dir=".">
-	        	<include name="license.txt"/>
-				<include name="src/**"/>
-	        	<include name="javadoc/**"/>
-	        </fileset>
-        </copy>
-
-		<copy todir="${build.dist.dir}">
-            <fileset dir="${build.dir}">
-        		<include name="docs/**" />
-        		<include name="*.jar" />
-            </fileset>
-        </copy>
-
-        <dirname property="build.dist.dir.dirname" file="${build.dist.dir}" />
-        <basename property="build.dist.dir.basename" file="${build.dist.dir}" />
-
-        <zip zipfile="${build.dist.zip}" basedir="${build.dist.dir.dirname}">
-			<include name="${build.dist.dir.basename}/**" />
-        </zip>
-
-	</target>
-
-	<target name="build-docs" description="downloads docs from wiki and processes them into the build/docs dir">
-		<property name="wiki.baseurl" value="http://code.google.com/p/${googlecode.projectname}/wiki"/>
-				
-		<mkdir dir="${docs.dir}"/>
-		
-		<svn><ls repository="http://${googlecode.projectname}.googlecode.com/svn" path="wiki" filterType="file" filterContains=".wiki"/></svn>
-		<propertyregex property="wiki.pages" input="${svn.ls}" regexp="\.wiki" replace=""/> 
-		<echo message="Getting wiki pages: ${wiki.pages}"/>
-		
-		<!-- Get files from wiki-->
-		<for list="${wiki.pages}" param="wiki.page" parallel="yes">
-		  <sequential>
-			<get dest="${docs.dir}/@{wiki.page}.html" src="${wiki.baseurl}/@{wiki.page}?show=content"/>
-		  </sequential>
-		</for>
-		
-		<!-- Replace links in files -->
-		<for list="${wiki.pages}" param="wiki.page">
-		  <sequential>
-		  	<echo message="replacing /p/${googlecode.projectname}/wiki/@{wiki.page} with @{wiki.page}.html in ${docs.dir}"/>
-			<replace dir="${docs.dir}" token="/p/${googlecode.projectname}/wiki/@{wiki.page}" value="@{wiki.page}.html"/>
-		  </sequential>
-		</for>
-		
-		<!-- link back to the wiki, if we haven't downloaded the content -->
-		<replace dir="${docs.dir}" token="/p/${googlecode.projectname}/wiki" value="${wiki.baseurl}"/>
-		
 	</target>
 </project>
