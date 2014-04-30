@@ -22,14 +22,13 @@
 
 package com.googlecode.batchfb.test;
 
-import com.googlecode.batchfb.test.util.TestBase;
-import org.testng.annotations.Test;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.googlecode.batchfb.FacebookBatcher;
 import com.googlecode.batchfb.Later;
 import com.googlecode.batchfb.err.OAuthException;
 import com.googlecode.batchfb.err.PageMigratedException;
+import com.googlecode.batchfb.test.util.TestBase;
+import org.testng.annotations.Test;
 
 /**
  * Tests of the exceptions generated.

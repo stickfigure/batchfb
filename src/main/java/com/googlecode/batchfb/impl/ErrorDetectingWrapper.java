@@ -25,12 +25,11 @@ package com.googlecode.batchfb.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.googlecode.batchfb.Batcher;
 import com.googlecode.batchfb.Later;
-import com.googlecode.batchfb.err.CodedFacebookException;
+import com.googlecode.batchfb.err.ErrorFacebookException;
 import com.googlecode.batchfb.err.FacebookException;
 import com.googlecode.batchfb.err.OAuthException;
 import com.googlecode.batchfb.err.PageMigratedException;
 import com.googlecode.batchfb.err.PermissionException;
-import com.googlecode.batchfb.err.QueryParseException;
 import com.googlecode.batchfb.util.LaterWrapper;
 
 import java.lang.reflect.Constructor;
@@ -86,69 +85,72 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 		JsonNode errorNode = node.get("error");
 		if (errorNode != null) {
 			// If we're missing type or message, it must be some other kind of error
-			String type = errorNode.path("type").asText();
+			String type = errorNode.path("type").textValue();
 			if (type == null)
 				return;
 			
-			String msg = errorNode.path("message").asText();
+			String msg = errorNode.path("message").textValue();
 			if (msg == null)
 				return;
 
-			int code = errorNode.path("code").asInt(-1);
-			int subcode = errorNode.path("error_subcode").asInt();
-			
-			// Special case, permission exceptions are poorly structured
-			if (msg.startsWith("(#200)"))
-				throw new PermissionException(msg, code, subcode);
-			
-			// Special case, migration exceptions are poorly structured
-			if (msg.startsWith("(#21)"))
-				this.throwPageMigratedException(msg, code, subcode);
-			
+			JsonNode codeNode = errorNode.get("code");
+			Integer code = codeNode == null ? null : codeNode.intValue();
+
+			JsonNode subcodeNode = errorNode.get("error_subcode");
+			Integer subcode = subcodeNode == null ? null : subcodeNode.intValue();
+
+			if (code != null) {
+				// Special case, migration exceptions are poorly structured
+				if (code == 21)
+					this.throwPageMigratedException(msg, code, subcode);
+
+				// Documented here: https://developers.facebook.com/docs/graph-api/using-graph-api
+				if (code == 10 || (code >= 200 || code <= 299))
+					throw new PermissionException(msg, type, code, subcode);
+			}
+
 			// We check to see if we have an exception that matches the type, otherwise
 			// we simply throw the base FacebookException
 			String proposedExceptionType = Batcher.class.getPackage().getName() + ".err." + type;
 			
 			try {
 				Class<?> exceptionClass = Class.forName(proposedExceptionType);
-				Constructor<?> ctor = exceptionClass.getConstructor(String.class, Integer.TYPE, Integer.TYPE);
-				throw (FacebookException)ctor.newInstance(msg);
+				Constructor<?> ctor = exceptionClass.getConstructor(String.class, String.class, Integer.TYPE, Integer.TYPE);
+				throw (FacebookException)ctor.newInstance(msg, type, code, subcode);
 			} catch (FacebookException e) {
 				throw e;
 			} catch (Exception e) {
-				throw new CodedFacebookException(type + ": " + msg, code, subcode);
+				throw new ErrorFacebookException(type + ": " + msg, type, code, subcode);
 			}
 		}
 	}
-	
+
 	/** Matches IDs in the error msg */
 	private static final Pattern ID_PATTERN = Pattern.compile("ID [0-9]+");
-	
+
 	/**
 	 * Builds the proper exception and throws it.
 	 * @throws PageMigratedException always
 	 */
-	private void throwPageMigratedException(String msg, int code, int subcode)
-	{
+	private void throwPageMigratedException(String msg, int code, int subcode) {
 		// This SUCKS ASS.  Messages look like:
 		// (#21) Page ID 114267748588304 was migrated to page ID 111013272313096.  Please update your API calls to the new ID
-		
+
 		Matcher matcher = ID_PATTERN.matcher(msg);
-		
+
 		long oldId = this.extractNextId(matcher, msg);
 		long newId = this.extractNextId(matcher, msg);
-		
+
 		throw new PageMigratedException(msg, code, subcode, oldId, newId);
 	}
 
 	/**
 	 * Gets the next id out of the matcher
 	 */
-	private long extractNextId(Matcher matcher, String msg)
-	{
+	private long extractNextId(Matcher matcher, String msg) {
 		if (!matcher.find())
 			throw new IllegalStateException("Facebook changed the error msg for page migration to something unfamiliar. The new msg is: " + msg);
-		
+
 		String idStr = matcher.group().substring("ID ".length());
 		return Long.parseLong(idStr);
 	}
@@ -223,15 +225,9 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			case 0:
 			case 101:
 			case 102:
-			case 190: throw new OAuthException(msg, code, -1);
+			case 190: throw new OAuthException(msg, "OAuthException", code, null);
 			
-			default:
-				if (code >= 200 && code < 300)
-					throw new PermissionException(msg, code, -1);
-				else if (code >= 600 && code < 700)
-					throw new QueryParseException(msg, code, -1);
-				else
-					throw new FacebookException(msg + " (code " + code +")");
+			default: throw new ErrorFacebookException(msg + " (code " + code +")", null, code, null);
 		}
 	}
 }

@@ -5,12 +5,12 @@ package com.googlecode.batchfb.err;
 /**
  * Thrown when fetching an id which has been migrated to a new id.  Note that
  * this isn't a proper graph exception; we synthesize it by careful examination of
- * the error text.  It's error 21.
+ * the error text.  It's error code 21.
  * 
  * The actual extraction of ids from the msg text (which relies on java regexes) has
  * been removed from this class so that it can be used in GWT. 
  */
-public class PageMigratedException extends CodedFacebookException
+public class PageMigratedException extends ErrorFacebookException
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -26,9 +26,9 @@ public class PageMigratedException extends CodedFacebookException
 	public long getNewId() { return this.newId; }
 	
 	/** */
-	public PageMigratedException(String msg, int code, int subcode, long oldId, long newId)
+	public PageMigratedException(String msg, Integer code, Integer subcode, long oldId, long newId)
 	{
-		super(msg, code, subcode);
+		super(msg, PageMigratedException.class.getSimpleName(), code, subcode);
 		this.oldId = oldId;
 		this.newId = newId;
 	}

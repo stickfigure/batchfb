@@ -23,42 +23,41 @@
 package com.googlecode.batchfb.err;
 
 /**
- * Adds the code and subcode that facebook includes when it gives us a proper JSON error response.
+ * Exception generated when Facebook returns a well-formed error to us. Includes the type,
+ * code, and subcode. Note that the codes may not exist.
  *
  * @author Jeff Schnitzer
  */
-public class CodedFacebookException extends FacebookException {
+public class ErrorFacebookException extends FacebookException {
 
 	private static final long serialVersionUID = 1L;
 
-	/** Facebook's 'code' */
-	int code;
+	/** Facebook's 'type' */
+	String type;
 
-	/** Facebook's 'error_subcode' */
-	int subcode;
+	/** Facebook's 'code', possibly null */
+	Integer code;
+
+	/** Facebook's 'error_subcode', possibly null */
+	Integer subcode;
 
 	/** Make GWT happy */
-	CodedFacebookException() {}
+	ErrorFacebookException() {}
 
 	/**
 	 */
-	public CodedFacebookException(String message, int code, int subcode) {
+	public ErrorFacebookException(String message, String type, Integer code, Integer subcode) {
 		super(message);
 		this.code = code;
 		this.subcode = subcode;
 	}
 
-	/**
-	 */
-	public CodedFacebookException(String message, int code, int subcode, Throwable cause) {
-		super(message, cause);
-		this.code = code;
-		this.subcode = subcode;
-	}
+	/** */
+	public String getType() { return type; }
 
 	/** */
-	public int getCode() { return code; }
+	public Integer getCode() { return code; }
 
 	/** */
-	public int getSubcode() { return subcode; }
+	public Integer getSubcode() { return subcode; }
 }
