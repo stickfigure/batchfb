@@ -106,6 +106,12 @@ public class FacebookBatcher implements Batcher {
 	 * Required facebook access token
 	 */
 	private String accessToken;
+
+	/**
+	 * Facebook api version, eg "v2.0". If null, submits a versionless request.
+	 * See https://developers.facebook.com/docs/apps/upgrading/
+	 */
+	private String apiVersion;
 	
 	/**
 	 * Jackson mapper used to translate all JSON to java classes.
@@ -146,14 +152,26 @@ public class FacebookBatcher implements Batcher {
 //	public FacebookBatcher() {
 //		this(null);
 //	}
-	
+
 	/**
-	 * Construct a batcher with the specified facebook access token.
-	 * 
+	 * Construct a batcher with the specified facebook access token. The api version will
+	 * be unspecified to facebook.
+	 *
 	 * @param accessToken is required; you cannot make unauthenticated batch FB requests
 	 */
 	public FacebookBatcher(String accessToken) {
+		this(accessToken, null);
+	}
+
+	/**
+	 * Construct a batcher with the specified facebook access token and api version.
+	 * 
+	 * @param accessToken is required; you cannot make unauthenticated batch FB requests.
+	 * @param apiVersion is the full version string, eg "v2.0". null results in versionless requests.
+	 */
+	public FacebookBatcher(String accessToken, String apiVersion) {
 		this.accessToken = accessToken;
+		this.apiVersion = apiVersion;
 		
 		// This allows us to deserialize private fields
 		this.mapper.setVisibilityChecker(Std.defaultInstance().withFieldVisibility(Visibility.NON_PRIVATE));
@@ -349,7 +367,7 @@ public class FacebookBatcher implements Batcher {
 		if (lastValidBatch != null && lastValidBatch.graphSize() < this.maxBatchSize)
 			return lastValidBatch;
 		else {
-			Batch next = new Batch(this, this.mapper, this.accessToken, this.timeout, this.retries);
+			Batch next = new Batch(this, this.mapper, this.accessToken, this.apiVersion, this.timeout, this.retries);
 			this.batches.add(next);
 			return next;
 		}

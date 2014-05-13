@@ -22,15 +22,6 @@
 
 package com.googlecode.batchfb.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -58,6 +49,15 @@ import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
 import com.googlecode.batchfb.util.RequestBuilder.HttpResponse;
 import com.googlecode.batchfb.util.StringUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * <p>Everything that can be done in a single Batch request.</p>
  * 
@@ -76,10 +76,16 @@ public class Batch implements Batcher, Later<JsonNode> {
 	private static final Logger log = Logger.getLogger(Batch.class.getName());
 	
 	/**
-	 * Optional facebook access token
+	 * Required facebook access token
 	 */
 	private String accessToken;
-	
+
+	/**
+	 * Facebook api version, eg "v2.0". If null, submits a versionless request.
+	 * See https://developers.facebook.com/docs/apps/upgrading/
+	 */
+	private String apiVersion;
+
 	/**
 	 * Jackson mapper used to translate all JSON to java classes.
 	 */
@@ -130,10 +136,11 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 * @param master is our parent batcher, probably the FacebookBatcher
 	 * @param accessToken can be null to make unauthenticated FB requests
 	 */
-	public Batch(Batcher master, ObjectMapper mapper, String accessToken, int timeout, int retries) {
+	public Batch(Batcher master, ObjectMapper mapper, String accessToken, String apiVersion, int timeout, int retries) {
 		this.master = master;
 		this.mapper = mapper;
 		this.accessToken = accessToken;
+		this.apiVersion = apiVersion;
 		this.timeout = timeout;
 		this.retries = retries;
 	}
@@ -384,7 +391,7 @@ public class Batch implements Batcher, Later<JsonNode> {
 	 * @return an asynchronous handle to the raw batch result, whatever it may be.
 	 */
 	private Later<JsonNode> createFetcher() {
-		final RequestBuilder call = new GraphRequestBuilder(FacebookBatcher.GRAPH_ENDPOINT, HttpMethod.POST, this.timeout, this.retries);
+		final RequestBuilder call = new GraphRequestBuilder(getGraphEndpoint(), HttpMethod.POST, this.timeout, this.retries);
 		
 		// This actually creates the correct JSON structure as an array
 		String batchValue = JSONUtils.toJSON(this.graphRequests, this.mapper);
@@ -452,5 +459,15 @@ public class Batch implements Batcher, Later<JsonNode> {
 				}
 			}
 		}
+	}
+
+	/**
+	 * @return the facebook graph endpoint base, with the optional api version.
+	 */
+	private String getGraphEndpoint() {
+		if (apiVersion == null)
+			return FacebookBatcher.GRAPH_ENDPOINT;
+		else
+			return FacebookBatcher.GRAPH_ENDPOINT + apiVersion + "/";
 	}
 }
