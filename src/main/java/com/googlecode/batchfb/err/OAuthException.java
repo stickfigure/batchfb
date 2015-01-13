@@ -33,7 +33,7 @@ public class OAuthException extends ErrorFacebookException {
 	/** Make GWT happy */
 	OAuthException() {}
 
-	public OAuthException(String message, String type, Integer code, Integer subcode) {
-		super(message, type, code, subcode);
+	public OAuthException(String message, String type, Integer code, Integer subcode, String userTitle, String userMsg) {
+		super(message, type, code, subcode, userTitle, userMsg);
 	}
 }

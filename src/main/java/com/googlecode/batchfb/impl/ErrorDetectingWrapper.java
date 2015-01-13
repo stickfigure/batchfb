@@ -99,14 +99,17 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			JsonNode subcodeNode = errorNode.get("error_subcode");
 			Integer subcode = subcodeNode == null ? null : subcodeNode.intValue();
 
+			String userTitle = errorNode.path("error_user_title").textValue();
+			String userMsg = errorNode.path("error_user_msg").textValue();
+
 			if (code != null) {
 				// Special case, migration exceptions are poorly structured
 				if (code == 21)
-					this.throwPageMigratedException(msg, code, subcode);
+					this.throwPageMigratedException(msg, code, subcode, userTitle, userMsg);
 
 				// Documented here: https://developers.facebook.com/docs/graph-api/using-graph-api
-				if (code == 10 || (code >= 200 || code <= 299))
-					throw new PermissionException(msg, type, code, subcode);
+				if (code == 10 || (code >= 200 && code <= 299))
+					throw new PermissionException(msg, type, code, subcode, userTitle, userMsg);
 			}
 
 			// We check to see if we have an exception that matches the type, otherwise
@@ -120,7 +123,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			} catch (FacebookException e) {
 				throw e;
 			} catch (Exception e) {
-				throw new ErrorFacebookException(type + ": " + msg, type, code, subcode);
+				throw new ErrorFacebookException(type + ": " + msg, type, code, subcode, userTitle, userMsg);
 			}
 		}
 	}
@@ -132,7 +135,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 	 * Builds the proper exception and throws it.
 	 * @throws PageMigratedException always
 	 */
-	private void throwPageMigratedException(String msg, int code, int subcode) {
+	private void throwPageMigratedException(String msg, int code, int subcode, String userTitle, String userMsg) {
 		// This SUCKS ASS.  Messages look like:
 		// (#21) Page ID 114267748588304 was migrated to page ID 111013272313096.  Please update your API calls to the new ID
 
@@ -141,7 +144,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 		long oldId = this.extractNextId(matcher, msg);
 		long newId = this.extractNextId(matcher, msg);
 
-		throw new PageMigratedException(msg, code, subcode, oldId, newId);
+		throw new PageMigratedException(msg, code, subcode, userTitle, userMsg, oldId, newId);
 	}
 
 	/**
@@ -204,6 +207,7 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 </pre>
 	 *
 	 * The code interpretations rely heavily on http://wiki.developers.facebook.com/index.php/Error_codes
+	 * The wayback machine: https://web.archive.org/web/20091223080550/http://wiki.developers.facebook.com/index.php/Error_codes
 	 */
 	protected void checkForOldRestStyleError(JsonNode node) {
 		JsonNode errorCode = node.get("error_code");
@@ -225,9 +229,9 @@ public class ErrorDetectingWrapper extends LaterWrapper<JsonNode, JsonNode>
 			case 0:
 			case 101:
 			case 102:
-			case 190: throw new OAuthException(msg, "OAuthException", code, null);
+			case 190: throw new OAuthException(msg, "OAuthException", code, null, null, null);
 			
-			default: throw new ErrorFacebookException(msg + " (code " + code +")", null, code, null);
+			default: throw new ErrorFacebookException(msg + " (code " + code +")", null, code, null, null, null);
 		}
 	}
 }

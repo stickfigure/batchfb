@@ -41,15 +41,23 @@ public class ErrorFacebookException extends FacebookException {
 	/** Facebook's 'error_subcode', possibly null */
 	Integer subcode;
 
+	/** FB says: "When you encounter this you should show the message directly to the user. It will be correctly translated per the locale of the API request." */
+	String userTitle;
+
+	/** FB says: " If you are showing an error dialog, this should be the title of the dialog. Again it will be correctly translated per the locale of the API request." */
+	String userMsg;
+
 	/** Make GWT happy */
 	ErrorFacebookException() {}
 
 	/**
 	 */
-	public ErrorFacebookException(String message, String type, Integer code, Integer subcode) {
+	public ErrorFacebookException(String message, String type, Integer code, Integer subcode, String userTitle, String userMsg) {
 		super(message);
 		this.code = code;
 		this.subcode = subcode;
+		this.userTitle = userTitle;
+		this.userMsg = userMsg;
 	}
 
 	/** */

@@ -13,8 +13,7 @@ public class PermissionException extends ErrorFacebookException
 	PermissionException() {}
 	
 	/** */
-	public PermissionException(String msg, String type, Integer code, Integer subcode)
-	{
-		super(msg, type, code, subcode);
+	public PermissionException(String msg, String type, Integer code, Integer subcode, String userTitle, String userMsg) {
+		super(msg, type, code, subcode, userTitle, userMsg);
 	}
 }

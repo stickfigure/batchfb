@@ -26,9 +26,9 @@ public class PageMigratedException extends ErrorFacebookException
 	public long getNewId() { return this.newId; }
 	
 	/** */
-	public PageMigratedException(String msg, Integer code, Integer subcode, long oldId, long newId)
+	public PageMigratedException(String msg, Integer code, Integer subcode, String userTitle, String userMsg, long oldId, long newId)
 	{
-		super(msg, PageMigratedException.class.getSimpleName(), code, subcode);
+		super(msg, PageMigratedException.class.getSimpleName(), code, subcode, userTitle, userMsg);
 		this.oldId = oldId;
 		this.newId = newId;
 	}
