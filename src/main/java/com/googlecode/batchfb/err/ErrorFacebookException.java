@@ -68,4 +68,14 @@ public class ErrorFacebookException extends FacebookException {
 
 	/** */
 	public Integer getSubcode() { return subcode; }
+
+	/** */
+	public String getUserTitle() {
+		return userTitle;
+	}
+
+	/** */
+	public String getUserMsg() {
+		return userMsg;
+	}
 }
