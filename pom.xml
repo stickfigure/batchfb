@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<properties>
@@ -10,7 +9,7 @@
 
 	<groupId>com.googlecode.batchfb</groupId>
 	<artifactId>batchfb</artifactId>
-	<version>2.1.6-SNAPSHOT</version>
+	<version>2.1.6</version>
 
 	<name>BatchFB</name>
 	<description>A power-user's interface to Facebook's Graph API.</description>
@@ -19,7 +18,8 @@
 	<scm>
 		<url>scm:git:https://code.google.com/p/batchfb/</url>
 		<developerConnection>scm:git:https://code.google.com/p/batchfb/</developerConnection>
-	</scm>
+	  <tag>2.1.6</tag>
+  </scm>
 	<licenses>
 		<license>
 			<name>MIT License</name>
