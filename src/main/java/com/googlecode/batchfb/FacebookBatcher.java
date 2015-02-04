@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.googlecode.batchfb.err.IOFacebookException;
 import com.googlecode.batchfb.impl.Batch;
 import com.googlecode.batchfb.impl.ErrorDetectingWrapper;
+import com.googlecode.batchfb.util.CryptoUtils;
 import com.googlecode.batchfb.util.Now;
 import com.googlecode.batchfb.util.RequestBuilder;
 import com.googlecode.batchfb.util.RequestBuilder.HttpMethod;
@@ -112,6 +113,13 @@ public class FacebookBatcher implements Batcher {
 	 * See https://developers.facebook.com/docs/apps/upgrading/
 	 */
 	private String apiVersion;
+
+	/**
+	 * The proof that can be passed to FB; null means don't pass it. It is calculated
+	 * per https://developers.facebook.com/docs/graph-api/securing-requests
+	 * hash_hmac('sha256', $access_token, $app_secret);
+	 */
+	private String appSecretProof;
 	
 	/**
 	 * Jackson mapper used to translate all JSON to java classes.
@@ -165,13 +173,27 @@ public class FacebookBatcher implements Batcher {
 
 	/**
 	 * Construct a batcher with the specified facebook access token and api version.
-	 * 
+	 *
 	 * @param accessToken is required; you cannot make unauthenticated batch FB requests.
 	 * @param apiVersion is the full version string, eg "v2.0". null results in versionless requests.
 	 */
 	public FacebookBatcher(String accessToken, String apiVersion) {
+		this(accessToken, null, apiVersion);
+	}
+
+	/**
+	 * Construct a batcher with the specified facebook access token and api version.
+	 * 
+	 * @param accessToken is required; you cannot make unauthenticated batch FB requests.
+	 * @param appSecret is your app secret; if present, appsecret_proof will be included with every request. Can be null.
+	 * @param apiVersion is the full version string, eg "v2.0". null results in versionless requests.
+	 */
+	public FacebookBatcher(String accessToken, String appSecret, String apiVersion) {
 		this.accessToken = accessToken;
 		this.apiVersion = apiVersion;
+
+		if (appSecret != null)
+			this.appSecretProof = CryptoUtils.makeAppSecretProof(appSecret, accessToken);
 		
 		// This allows us to deserialize private fields
 		this.mapper.setVisibilityChecker(Std.defaultInstance().withFieldVisibility(Visibility.NON_PRIVATE));

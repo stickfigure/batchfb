@@ -81,6 +81,11 @@ public class Batch implements Batcher, Later<JsonNode> {
 	private String accessToken;
 
 	/**
+	 * If not null, pass this proof with every method call
+	 */
+	private String appSecretProof;
+
+	/**
 	 * Facebook api version, eg "v2.0". If null, submits a versionless request.
 	 * See https://developers.facebook.com/docs/apps/upgrading/
 	 */
@@ -448,6 +453,9 @@ public class Batch implements Batcher, Later<JsonNode> {
 		
 		if (this.accessToken != null)
 			call.addParam("access_token", this.accessToken);
+
+		if (this.appSecretProof != null)
+			call.addParam("appsecret_proof", this.appSecretProof);
 
 		if (params != null) {
 			for (Param param: params) {
