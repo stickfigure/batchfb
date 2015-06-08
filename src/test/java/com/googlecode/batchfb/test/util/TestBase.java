@@ -37,7 +37,7 @@ import com.googlecode.batchfb.FacebookBatcher;
 public class TestBase {
 	
 	/** This should be set on the command line with a -DaccessToken=BLAH argument */
-	protected static final String ACCESS_TOKEN = System.getProperty("accessToken");
+	protected static final String ACCESS_TOKEN = System.getProperty("accessToken", "");
 	
 	/** */
 	protected Batcher authBatcher;
