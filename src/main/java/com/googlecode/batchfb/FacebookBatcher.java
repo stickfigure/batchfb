@@ -28,6 +28,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker.Std;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.googlecode.batchfb.err.IOFacebookException;
@@ -203,6 +204,9 @@ public class FacebookBatcher implements Batcher {
 		
 		// We don't want to send null values to FB for things like omit_response_on_success
 		this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+		// Facebook uses underscores, not camelcase
+		this.mapper.setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES);
 	}
 	
 	/**
