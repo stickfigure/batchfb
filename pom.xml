@@ -9,7 +9,7 @@
 
 	<groupId>com.googlecode.batchfb</groupId>
 	<artifactId>batchfb</artifactId>
-	<version>2.1.7</version>
+	<version>2.1.7-SNAPSHOT</version>
 
 	<name>BatchFB</name>
 	<description>A power-user's interface to Facebook's Graph API.</description>
@@ -18,7 +18,7 @@
 	<scm>
 		<url>scm:git:https://code.google.com/p/batchfb/</url>
 		<developerConnection>scm:git:https://code.google.com/p/batchfb/</developerConnection>
-	  <tag>batchfb-2.1.7</tag>
+	  <tag>HEAD</tag>
   </scm>
 	<licenses>
 		<license>
