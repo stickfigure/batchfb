@@ -14,12 +14,12 @@
 	<name>BatchFB</name>
 	<description>A power-user's interface to Facebook's Graph API.</description>
 	<packaging>jar</packaging>
-	<url>http://code.google.com/p/batchfb/</url>
+	<url>https://github.com/stickfigure/batchfb</url>
 	<scm>
-		<url>scm:git:https://code.google.com/p/batchfb/</url>
-		<developerConnection>scm:git:https://code.google.com/p/batchfb/</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
+		<url>scm:git:https://github.com/stickfigure/batchfb</url>
+		<developerConnection>scm:git:https://github.com/stickfigure/batchfb</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
 	<licenses>
 		<license>
 			<name>MIT License</name>
